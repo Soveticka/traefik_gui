@@ -216,13 +216,13 @@ const RouterForm = ({ router, onSave, onClose }: RouterFormProps) => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
               Middlewares (Optional)
             </label>
             {loading ? (
               <div className="flex items-center justify-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
-                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading middlewares...</span>
+                <span className="ml-2 text-sm text-gray-600 dark:text-gray-300">Loading middlewares...</span>
               </div>
             ) : (
               <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 dark:bg-gray-800">
@@ -234,11 +234,11 @@ const RouterForm = ({ router, onSave, onClose }: RouterFormProps) => {
                       value={middleware}
                       className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
                     />
-                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{middleware}</span>
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">{middleware}</span>
                   </label>
                 ))}
                 {availableMiddlewares.length === 0 && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  <p className="text-sm text-gray-500 dark:text-gray-300 italic">
                     No middlewares available
                   </p>
                 )}

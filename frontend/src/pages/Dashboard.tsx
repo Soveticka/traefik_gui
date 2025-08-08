@@ -60,7 +60,7 @@ const Dashboard = () => {
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
           Dashboard
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
           Manage your Traefik dynamic configuration with style ✨
         </p>
       </div>
@@ -76,7 +76,7 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
                     Routers
                   </dt>
                   <dd className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -99,7 +99,7 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
                     Services
                   </dt>
                   <dd className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -122,7 +122,7 @@ const Dashboard = () => {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-400 truncate">
+                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
                     Middlewares
                   </dt>
                   <dd className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -139,7 +139,7 @@ const Dashboard = () => {
       <div className="glass-card rounded-2xl p-8">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Configuration Management</h2>
-          <p className="text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+          <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Split your monolithic dynamic.yml file into organized separate files (routers.yml, services.yml, middlewares.yml) 
             for better organization and maintainability.
           </p>

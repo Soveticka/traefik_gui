@@ -103,7 +103,7 @@ const Routers = () => {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
             Routers
           </h1>
-          <p className="text-lg text-gray-700 dark:text-gray-300">
+          <p className="text-lg text-gray-600 dark:text-gray-300">
             Manage your Traefik routers that define how incoming requests are routed to services.
           </p>
         </div>
@@ -140,7 +140,7 @@ const Routers = () => {
                     <p className="text-base font-semibold text-purple-600 dark:text-purple-400 truncate">
                       {name}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                       {router.rule}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">

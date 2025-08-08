@@ -106,7 +106,7 @@ const Middlewares = () => {
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
             Middlewares
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-lg text-gray-600 dark:text-gray-300">
             Manage your Traefik middlewares that modify requests and responses between routers and services.
           </p>
         </div>

@@ -142,7 +142,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
         <div className="glass-card rounded-xl p-6">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="text-center mt-2 text-gray-600 dark:text-gray-400">Loading middlewares...</p>
+          <p className="text-center mt-2 text-gray-600 dark:text-gray-300">Loading middlewares...</p>
         </div>
       </div>
     );
@@ -156,7 +156,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
               Create Router + Service
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
               Create both router and service in a single step
             </p>
           </div>
@@ -172,7 +172,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
           {/* Names Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                 Router Name
               </label>
               <input
@@ -187,7 +187,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                 Service Name (Auto-generated)
               </label>
               <input
@@ -207,7 +207,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
               </h4>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                   Entry Points
                 </label>
                 {entryPointFields.map((field, index) => (
@@ -240,7 +240,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                   Rule
                 </label>
                 <input
@@ -261,13 +261,13 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                     type="checkbox"
                     className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Enable TLS</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Enable TLS</span>
                 </label>
               </div>
 
               {tlsEnabled && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                     Certificate Resolver (Optional)
                   </label>
                   <input
@@ -292,11 +292,11 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                         value={middleware}
                         className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
                       />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{middleware}</span>
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">{middleware}</span>
                     </label>
                   ))}
                   {availableMiddlewares.length === 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                    <p className="text-sm text-gray-500 dark:text-gray-300 italic">
                       No middlewares available
                     </p>
                   )}
@@ -311,7 +311,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
               </h4>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                   Servers
                 </label>
                 {serverFields.map((field, index) => (
@@ -354,14 +354,14 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                     type="checkbox"
                     className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">Enable Health Check</span>
+                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Enable Health Check</span>
                 </label>
               </div>
 
               {healthCheckEnabled && (
                 <div className="space-y-3 pl-4 border-l-2 border-purple-200 dark:border-purple-800">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                       Health Check Path
                     </label>
                     <input
@@ -374,7 +374,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                         Interval
                       </label>
                       <input
@@ -386,7 +386,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                         Timeout
                       </label>
                       <input
@@ -401,7 +401,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                   Servers Transport (Optional)
                 </label>
                 <input
