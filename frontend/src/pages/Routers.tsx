@@ -75,36 +75,39 @@ const Routers = () => {
 
   return (
     <div>
-      <div className="sm:flex sm:items-center mb-6">
+      <div className="sm:flex sm:items-center mb-8">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-bold text-gray-900">Routers</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
+            Routers
+          </h1>
+          <p className="text-lg text-gray-700 dark:text-gray-300">
             Manage your Traefik routers that define how incoming requests are routed to services.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+        <div className="mt-6 sm:mt-0 sm:ml-16 sm:flex-none">
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
+            className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500/50"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Router
+            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </button>
         </div>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul className="divide-y divide-gray-200">
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {Object.entries(routers).map(([name, router]) => (
-            <li key={name}>
-              <div className="px-4 py-4 sm:px-6">
+            <li key={name} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors duration-150">
+              <div className="px-6 py-5">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-blue-600 truncate">
+                    <p className="text-base font-semibold text-purple-600 dark:text-purple-400 truncate">
                       {name}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       {router.rule}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
