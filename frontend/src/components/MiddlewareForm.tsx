@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { TraefikMiddleware } from '../types/traefik';
@@ -29,7 +29,7 @@ interface FormData {
 }
 
 const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) => {
-  const { register, control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       name: '',
       type: 'headers',
