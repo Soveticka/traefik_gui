@@ -3,10 +3,13 @@ FROM node:18-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm install
 
 COPY . .
 RUN npm run build
+
+# Clean up dev dependencies after build
+RUN npm prune --omit=dev
 
 EXPOSE 3001
 
