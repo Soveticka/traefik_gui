@@ -1,6 +1,16 @@
 import axios from 'axios';
 import { TraefikRouter, TraefikService, TraefikMiddleware } from '../types/traefik';
-import { API_CONFIG } from '../config/api';
+
+// API Configuration
+const API_CONFIG = {
+  baseURL: '/api',
+  timeout: 10000,
+  defaultHeaders: {
+    'Content-Type': 'application/json',
+  },
+  bearerToken: import.meta.env.VITE_TRAEFIK_BEARER_TOKEN || '',
+  apiKey: import.meta.env.VITE_TRAEFIK_API_KEY || '',
+};
 
 const api = axios.create({
   baseURL: API_CONFIG.baseURL,
