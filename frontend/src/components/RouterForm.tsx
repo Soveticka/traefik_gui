@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { TraefikRouter } from '../types/traefik';
+import { middlewaresApi } from '../services/api';
 
 interface RouterFormProps {
   router?: { name: string; data: TraefikRouter } | null;
@@ -16,10 +17,13 @@ interface FormData {
   service: string;
   tlsEnabled: boolean;
   certResolver: string;
-  middlewares: { value: string }[];
+  middlewares: string[];
 }
 
 const RouterForm = ({ router, onSave, onClose }: RouterFormProps) => {
+  const [availableMiddlewares, setAvailableMiddlewares] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       name: '',
@@ -37,12 +41,23 @@ const RouterForm = ({ router, onSave, onClose }: RouterFormProps) => {
     name: 'entryPoints',
   });
 
-  const { fields: middlewareFields, append: appendMiddleware, remove: removeMiddleware } = useFieldArray({
-    control,
-    name: 'middlewares',
-  });
-
   const tlsEnabled = watch('tlsEnabled');
+
+  useEffect(() => {
+    const fetchMiddlewares = async () => {
+      try {
+        const response = await middlewaresApi.getAll();
+        setAvailableMiddlewares(Object.keys(response.data));
+      } catch (error) {
+        console.error('Failed to load middlewares:', error);
+        setAvailableMiddlewares([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMiddlewares();
+  }, []);
 
   useEffect(() => {
     if (router) {
@@ -54,7 +69,7 @@ const RouterForm = ({ router, onSave, onClose }: RouterFormProps) => {
         service: router.data.service,
         tlsEnabled: !!router.data.tls,
         certResolver: tlsConfig?.certResolver || '',
-        middlewares: (router.data.middlewares || []).map(m => ({ value: m })),
+        middlewares: router.data.middlewares || [],
       });
     }
   }, [router, reset]);
@@ -74,9 +89,8 @@ const RouterForm = ({ router, onSave, onClose }: RouterFormProps) => {
       }
     }
 
-    const middlewares = data.middlewares.map(m => m.value).filter(Boolean);
-    if (middlewares.length > 0) {
-      routerData.middlewares = middlewares;
+    if (data.middlewares.length > 0) {
+      routerData.middlewares = data.middlewares;
     }
 
     onSave(data.name, routerData);
@@ -202,33 +216,34 @@ const RouterForm = ({ router, onSave, onClose }: RouterFormProps) => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Middlewares (Optional)
             </label>
-            {middlewareFields.map((field, index) => (
-              <div key={field.id} className="flex mt-1 space-x-2">
-                <input
-                  {...register(`middlewares.${index}.value` as const)}
-                  type="text"
-                  className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="middleware-name"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeMiddleware(index)}
-                  className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  Remove
-                </button>
+            {loading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
+                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Loading middlewares...</span>
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => appendMiddleware({ value: '' })}
-              className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
-            >
-              Add Middleware
-            </button>
+            ) : (
+              <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 dark:bg-gray-800">
+                {availableMiddlewares.map((middleware) => (
+                  <label key={middleware} className="flex items-center">
+                    <input
+                      {...register('middlewares')}
+                      type="checkbox"
+                      value={middleware}
+                      className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{middleware}</span>
+                  </label>
+                ))}
+                {availableMiddlewares.length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                    No middlewares available
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

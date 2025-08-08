@@ -5,6 +5,7 @@ import { routersRouter } from './routes/routers';
 import { servicesRouter } from './routes/services';
 import { middlewaresRouter } from './routes/middlewares';
 import { configRouter } from './routes/config';
+import { combinedRouter } from './routes/combined';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,6 +20,7 @@ app.use('/api/routers', routersRouter);
 app.use('/api/services', servicesRouter);
 app.use('/api/middlewares', middlewaresRouter);
 app.use('/api/config', configRouter);
+app.use('/api/combined', combinedRouter);
 
 // Health check
 app.get('/health', (req, res) => {

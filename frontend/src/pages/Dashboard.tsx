@@ -57,10 +57,10 @@ const Dashboard = () => {
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-4">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
           Dashboard
         </h1>
-        <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
           Manage your Traefik dynamic configuration with style ✨
         </p>
       </div>

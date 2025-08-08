@@ -29,11 +29,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Animated Background */}
-      <div className="fixed inset-0 -z-10">
-        <div className={theme === 'dark' ? 'dark-gradient-bg' : 'gradient-bg'} />
-        <div className="absolute inset-0 bg-mesh-gradient dark:bg-dark-mesh-gradient opacity-30" />
-      </div>
+      {/* Simplified Background */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-gray-50 via-purple-50/30 to-pink-50/30 dark:from-gray-900 dark:via-purple-900/20 dark:to-gray-800" />
 
       <nav className="glass-effect border-b border-white/10 dark:border-gray-800/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,11 +95,10 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </main>
 
-      {/* Floating orbs for extra visual appeal */}
+      {/* Subtle floating orbs */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/2 left-3/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '4s' }} />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-400/5 rounded-full blur-3xl animate-float" />
+        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-pink-500/5 dark:bg-pink-400/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
       </div>
     </div>
   );

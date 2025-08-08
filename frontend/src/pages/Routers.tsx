@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, ExternalLink } from 'lucide-react';
-import { routersApi } from '../services/api';
-import { TraefikRouter } from '../types/traefik';
+import { Plus, Edit, Trash2, ExternalLink, Layers } from 'lucide-react';
+import { routersApi, combinedApi } from '../services/api';
+import { TraefikRouter, TraefikService } from '../types/traefik';
 import RouterForm from '../components/RouterForm';
+import CombinedRouterServiceForm from '../components/CombinedRouterServiceForm';
 import toast from 'react-hot-toast';
 
 const Routers = () => {
   const [routers, setRouters] = useState<Record<string, TraefikRouter>>({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showCombinedForm, setShowCombinedForm] = useState(false);
   const [editingRouter, setEditingRouter] = useState<{ name: string; data: TraefikRouter } | null>(null);
 
   useEffect(() => {
@@ -60,9 +62,30 @@ const Routers = () => {
     setShowForm(true);
   };
 
+  const handleSaveCombined = async (data: {
+    routerName: string;
+    serviceName: string;
+    router: TraefikRouter;
+    service: TraefikService;
+  }) => {
+    try {
+      await combinedApi.createRouterService(data);
+      toast.success(`Router "${data.routerName}" and service "${data.serviceName}" created successfully!`);
+      setShowCombinedForm(false);
+      fetchRouters();
+    } catch (error) {
+      toast.error('Failed to create router and service');
+      console.error('Create combined error:', error);
+    }
+  };
+
   const handleCloseForm = () => {
     setShowForm(false);
     setEditingRouter(null);
+  };
+
+  const handleCloseCombinedForm = () => {
+    setShowCombinedForm(false);
   };
 
   if (loading) {
@@ -84,14 +107,24 @@ const Routers = () => {
             Manage your Traefik routers that define how incoming requests are routed to services.
           </p>
         </div>
-        <div className="mt-6 sm:mt-0 sm:ml-16 sm:flex-none">
+        <div className="mt-6 sm:mt-0 sm:ml-16 sm:flex-none flex space-x-3">
+          <button
+            type="button"
+            onClick={() => setShowCombinedForm(true)}
+            className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500/50"
+          >
+            <Layers className="h-4 w-4 mr-2" />
+            Router + Service
+            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          </button>
+
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500/50"
+            className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500/50"
           >
             <Plus className="h-4 w-4 mr-2" />
-            Add Router
+            Router Only
             <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </button>
         </div>
@@ -166,6 +199,13 @@ const Routers = () => {
           router={editingRouter}
           onSave={handleSave}
           onClose={handleCloseForm}
+        />
+      )}
+
+      {showCombinedForm && (
+        <CombinedRouterServiceForm
+          onSave={handleSaveCombined}
+          onClose={handleCloseCombinedForm}
         />
       )}
     </div>

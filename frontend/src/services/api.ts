@@ -1,10 +1,14 @@
 import axios from 'axios';
 import { TraefikRouter, TraefikService, TraefikMiddleware } from '../types/traefik';
+import { API_CONFIG } from '../config/api';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_CONFIG.baseURL,
+  timeout: API_CONFIG.timeout,
   headers: {
-    'Content-Type': 'application/json',
+    ...API_CONFIG.defaultHeaders,
+    ...(API_CONFIG.bearerToken && { 'Authorization': `Bearer ${API_CONFIG.bearerToken}` }),
+    ...(API_CONFIG.apiKey && { 'X-API-Key': API_CONFIG.apiKey }),
   },
 });
 
@@ -32,4 +36,13 @@ export const middlewaresApi = {
 export const configApi = {
   getAll: () => api.get('/config'),
   split: () => api.post('/config/split'),
+};
+
+export const combinedApi = {
+  createRouterService: (data: {
+    routerName: string;
+    serviceName: string;
+    router: TraefikRouter;
+    service: TraefikService;
+  }) => api.post('/combined/router-service', data),
 };

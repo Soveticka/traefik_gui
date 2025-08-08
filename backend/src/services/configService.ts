@@ -13,7 +13,17 @@ export class ConfigService {
     }
   }
 
+  private hasSplitFiles(): boolean {
+    return fs.existsSync(path.join(CONFIG_PATH, 'routers.yml')) ||
+           fs.existsSync(path.join(CONFIG_PATH, 'services.yml')) ||
+           fs.existsSync(path.join(CONFIG_PATH, 'middlewares.yml'));
+  }
+
   async loadFullConfig(): Promise<TraefikConfig> {
+    if (this.hasSplitFiles()) {
+      return this.loadSplitConfig();
+    }
+    
     try {
       const content = fs.readFileSync(DYNAMIC_FILE_PATH, 'utf8');
       return YAML.parse(content) as TraefikConfig;
@@ -29,13 +39,92 @@ export class ConfigService {
     }
   }
 
+  private async loadSplitConfig(): Promise<TraefikConfig> {
+    const config: TraefikConfig = {
+      http: {
+        routers: {},
+        services: {},
+        middlewares: {}
+      }
+    };
+
+    try {
+      // Load routers
+      const routersPath = path.join(CONFIG_PATH, 'routers.yml');
+      if (fs.existsSync(routersPath)) {
+        const routersContent = fs.readFileSync(routersPath, 'utf8');
+        const routersConfig = YAML.parse(routersContent);
+        config.http.routers = routersConfig.http?.routers || {};
+      }
+
+      // Load services
+      const servicesPath = path.join(CONFIG_PATH, 'services.yml');
+      if (fs.existsSync(servicesPath)) {
+        const servicesContent = fs.readFileSync(servicesPath, 'utf8');
+        const servicesConfig = YAML.parse(servicesContent);
+        config.http.services = servicesConfig.http?.services || {};
+        if (servicesConfig.http?.serversTransports) {
+          config.http.serversTransports = servicesConfig.http.serversTransports;
+        }
+      }
+
+      // Load middlewares
+      const middlewaresPath = path.join(CONFIG_PATH, 'middlewares.yml');
+      if (fs.existsSync(middlewaresPath)) {
+        const middlewaresContent = fs.readFileSync(middlewaresPath, 'utf8');
+        const middlewaresConfig = YAML.parse(middlewaresContent);
+        config.http.middlewares = middlewaresConfig.http?.middlewares || {};
+      }
+
+      return config;
+    } catch (error) {
+      console.error('Error loading split config:', error);
+      return config;
+    }
+  }
+
   async saveFullConfig(config: TraefikConfig): Promise<void> {
+    if (this.hasSplitFiles()) {
+      return this.saveSplitConfig(config);
+    }
+
     try {
       const yamlContent = YAML.stringify(config, { indent: 2 });
       fs.writeFileSync(DYNAMIC_FILE_PATH, yamlContent, 'utf8');
     } catch (error) {
       console.error('Error saving config:', error);
       throw new Error('Failed to save configuration');
+    }
+  }
+
+  private async saveSplitConfig(config: TraefikConfig): Promise<void> {
+    this.ensureConfigDir();
+
+    try {
+      // Save routers
+      const routersConfig = { http: { routers: config.http.routers } };
+      const routersPath = path.join(CONFIG_PATH, 'routers.yml');
+      fs.writeFileSync(routersPath, YAML.stringify(routersConfig, { indent: 2 }), 'utf8');
+
+      // Save services
+      const servicesConfig = { 
+        http: { 
+          services: config.http.services,
+          ...(config.http.serversTransports && { serversTransports: config.http.serversTransports })
+        } 
+      };
+      const servicesPath = path.join(CONFIG_PATH, 'services.yml');
+      fs.writeFileSync(servicesPath, YAML.stringify(servicesConfig, { indent: 2 }), 'utf8');
+
+      // Save middlewares
+      const middlewaresConfig = { http: { middlewares: config.http.middlewares } };
+      const middlewaresPath = path.join(CONFIG_PATH, 'middlewares.yml');
+      fs.writeFileSync(middlewaresPath, YAML.stringify(middlewaresConfig, { indent: 2 }), 'utf8');
+
+      console.log('Split configuration saved successfully');
+    } catch (error) {
+      console.error('Error saving split config:', error);
+      throw new Error('Failed to save split configuration');
     }
   }
 
