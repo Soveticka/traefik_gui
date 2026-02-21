@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  traefik-gui-backend:
+    image: ghcr.io/soveticka/traefik-gui-backend:latest
+    container_name: traefik-gui-backend
+    ports:
+      - "3001:3001"
+    volumes:
+      - /opt/traefik/data/dynamic:/app/config
+      - /opt/traefik/data/dynamic.yml:/app/dynamic.yml
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CONFIG_PATH=/app/config
+      - DYNAMIC_FILE_PATH=/app/dynamic.yml
+    restart: unless-stopped
+
+  traefik-gui-frontend:
+    image: ghcr.io/soveticka/traefik-gui-frontend:latest
+    container_name: traefik-gui-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - traefik-gui-backend
+    restart: unless-stopped
