@@ -160,15 +160,15 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-md bg-white">
+    <div className="modal-overlay">
+      <div className="modal-card max-w-3xl">
         <div className="flex justify-between items-center pb-3">
-          <h3 className="text-lg font-medium">
+          <h3 className="text-lg font-medium text-[var(--text-primary)]">
             {middleware ? `Edit Middleware: ${middleware.name}` : 'Create New Middleware'}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
@@ -176,13 +176,13 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="form-label">
               Middleware Name
             </label>
             <input
               {...register('name', { required: 'Middleware name is required' })}
               type="text"
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="form-input"
               disabled={!!middleware}
             />
             {errors.name && (
@@ -191,12 +191,12 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="form-label">
               Middleware Type
             </label>
             <select
               {...register('type', { required: 'Middleware type is required' })}
-              className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="form-input"
               disabled={!!middleware}
             >
               <option value="headers">Headers</option>
@@ -207,51 +207,51 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
           </div>
 
           {middlewareType === 'errors' && (
-            <div className="space-y-4 p-4 bg-red-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-900">Error Pages Configuration</h4>
-              
+            <div className="space-y-4 p-4 bg-accent-red/5 border border-accent-red/10 rounded-lg">
+              <h4 className="text-sm font-medium text-[var(--text-primary)]">Error Pages Configuration</h4>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="form-label">
                   Query Template
                 </label>
                 <input
                   {...register('errorQuery', { required: 'Query template is required' })}
                   type="text"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="form-input"
                   placeholder="/{status}"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="form-label">
                   Error Service
                 </label>
                 <input
                   {...register('errorService', { required: 'Error service is required' })}
                   type="text"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="form-input"
                   placeholder="error-pages-service"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="form-label">
                   Status Codes
                 </label>
                 {errorStatusFields.map((field, index) => (
                   <div key={field.id} className="flex mt-1 space-x-2">
                     <input
-                      {...register(`errorStatus.${index}.value` as const, { 
-                        required: 'Status code is required' 
+                      {...register(`errorStatus.${index}.value` as const, {
+                        required: 'Status code is required'
                       })}
                       type="text"
-                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 form-input"
                       placeholder="400-599"
                     />
                     <button
                       type="button"
                       onClick={() => removeErrorStatus(index)}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                       disabled={errorStatusFields.length === 1}
                     >
                       Remove
@@ -261,7 +261,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
                 <button
                   type="button"
                   onClick={() => appendErrorStatus({ value: '' })}
-                  className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                  className="mt-2 px-3 py-1 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Add Status Code
                 </button>
@@ -270,37 +270,37 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
           )}
 
           {middlewareType === 'rateLimit' && (
-            <div className="space-y-4 p-4 bg-yellow-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-900">Rate Limit Configuration</h4>
-              
+            <div className="space-y-4 p-4 bg-accent-yellow/5 border border-accent-yellow/10 rounded-lg">
+              <h4 className="text-sm font-medium text-[var(--text-primary)]">Rate Limit Configuration</h4>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="form-label">
                     Average (requests/second)
                   </label>
                   <input
-                    {...register('rateLimitAverage', { 
+                    {...register('rateLimitAverage', {
                       required: 'Average rate is required',
                       valueAsNumber: true,
                       min: 1
                     })}
                     type="number"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="form-label">
                     Burst
                   </label>
                   <input
-                    {...register('rateLimitBurst', { 
+                    {...register('rateLimitBurst', {
                       required: 'Burst limit is required',
                       valueAsNumber: true,
                       min: 1
                     })}
                     type="number"
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input"
                   />
                 </div>
               </div>
@@ -308,11 +308,11 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
           )}
 
           {middlewareType === 'headers' && (
-            <div className="space-y-6 p-4 bg-blue-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-900">Headers Configuration</h4>
-              
+            <div className="space-y-6 p-4 bg-accent-cyan/5 border border-accent-cyan/10 rounded-lg">
+              <h4 className="text-sm font-medium text-[var(--text-primary)]">Headers Configuration</h4>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="form-label mb-2">
                   Custom Request Headers
                 </label>
                 {requestHeaderFields.map((field, index) => (
@@ -321,18 +321,18 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
                       {...register(`requestHeaders.${index}.key` as const)}
                       type="text"
                       placeholder="Header name"
-                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 form-input"
                     />
                     <input
                       {...register(`requestHeaders.${index}.value` as const)}
                       type="text"
                       placeholder="Header value"
-                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 form-input"
                     />
                     <button
                       type="button"
                       onClick={() => removeRequestHeader(index)}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                     >
                       Remove
                     </button>
@@ -341,14 +341,14 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
                 <button
                   type="button"
                   onClick={() => appendRequestHeader({ key: '', value: '' })}
-                  className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                  className="mt-2 px-3 py-1 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Add Request Header
                 </button>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="form-label mb-2">
                   Custom Response Headers
                 </label>
                 {responseHeaderFields.map((field, index) => (
@@ -357,18 +357,18 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
                       {...register(`responseHeaders.${index}.key` as const)}
                       type="text"
                       placeholder="Header name"
-                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 form-input"
                     />
                     <input
                       {...register(`responseHeaders.${index}.value` as const)}
                       type="text"
                       placeholder="Header value"
-                      className="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 form-input"
                     />
                     <button
                       type="button"
                       onClick={() => removeResponseHeader(index)}
-                      className="px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                      className="px-3 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                     >
                       Remove
                     </button>
@@ -377,7 +377,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
                 <button
                   type="button"
                   onClick={() => appendResponseHeader({ key: '', value: '' })}
-                  className="mt-2 px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50"
+                  className="mt-2 px-3 py-1 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Add Response Header
                 </button>
@@ -386,40 +386,40 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
           )}
 
           {middlewareType === 'redirectRegex' && (
-            <div className="space-y-4 p-4 bg-purple-50 rounded-lg">
-              <h4 className="text-sm font-medium text-gray-900">Redirect Regex Configuration</h4>
-              
+            <div className="space-y-4 p-4 bg-accent-purple/5 border border-accent-purple/10 rounded-lg">
+              <h4 className="text-sm font-medium text-[var(--text-primary)]">Redirect Regex Configuration</h4>
+
               <div>
                 <label className="flex items-center">
                   <input
                     {...register('redirectPermanent')}
                     type="checkbox"
-                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    className="form-checkbox"
                   />
-                  <span className="ml-2 text-sm text-gray-700">Permanent Redirect (301)</span>
+                  <span className="ml-2 text-sm text-[var(--text-secondary)]">Permanent Redirect (301)</span>
                 </label>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="form-label">
                   Regex Pattern
                 </label>
                 <input
                   {...register('redirectRegex', { required: 'Regex pattern is required' })}
                   type="text"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="form-input"
                   placeholder=".*"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="form-label">
                   Replacement URL
                 </label>
                 <input
                   {...register('redirectReplacement', { required: 'Replacement URL is required' })}
                   type="text"
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="form-input"
                   placeholder="https://example.com"
                 />
               </div>
@@ -430,13 +430,13 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              className="btn-primary"
             >
               {middleware ? 'Update' : 'Create'} Middleware
             </button>

@@ -11,10 +11,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ThemeProvider>
       <BrowserRouter>
         <App />
-        <Toaster 
+        <Toaster
           position="top-right"
           toastOptions={{
-            className: 'dark:bg-gray-800 dark:text-white',
+            className: '',
             style: {
               background: 'var(--toast-bg)',
               color: 'var(--toast-color)',

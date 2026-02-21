@@ -1,16 +1,15 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { 
-  Route, 
-  Server, 
-  Shield, 
-  Home,
+import {
+  Route,
+  Server,
+  Shield,
+  LayoutDashboard,
   Settings,
-  Moon,
-  Sun,
-  Sparkles
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { routersApi, servicesApi, middlewaresApi } from '../services/api';
 
 interface LayoutProps {
   children: ReactNode;
@@ -18,87 +17,128 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
-  const { theme, toggleTheme } = useTheme();
+  const [collapsed, setCollapsed] = useState(false);
+  const [counts, setCounts] = useState({ routers: 0, services: 0, middlewares: 0 });
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const [r, s, m] = await Promise.all([
+          routersApi.getAll(),
+          servicesApi.getAll(),
+          middlewaresApi.getAll(),
+        ]);
+        setCounts({
+          routers: Object.keys(r.data).length,
+          services: Object.keys(s.data).length,
+          middlewares: Object.keys(m.data).length,
+        });
+      } catch {
+        // silently fail — counts are non-critical
+      }
+    };
+    fetchCounts();
+  }, [location.pathname]); // refresh counts on navigation
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: Home },
-    { name: 'Routers', href: '/routers', icon: Route },
-    { name: 'Services', href: '/services', icon: Server },
-    { name: 'Middlewares', href: '/middlewares', icon: Shield },
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard, section: 'Overview' },
+    { name: 'Routers', href: '/routers', icon: Route, section: 'Configuration', count: counts.routers },
+    { name: 'Services', href: '/services', icon: Server, section: 'Configuration', count: counts.services },
+    { name: 'Middlewares', href: '/middlewares', icon: Shield, section: 'Configuration', count: counts.middlewares },
   ];
 
-  return (
-    <div className="min-h-screen relative">
-      {/* Simplified Background */}
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-gray-50 via-purple-50/30 to-pink-50/30 dark:from-gray-900 dark:via-purple-900/20 dark:to-gray-800" />
+  // Group items by section
+  const sections: Record<string, typeof navigation> = {};
+  navigation.forEach(item => {
+    if (!sections[item.section]) sections[item.section] = [];
+    sections[item.section].push(item);
+  });
 
-      <nav className="glass-effect border-b border-white/10 dark:border-gray-800/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <div className="relative">
-                  <Settings className="h-8 w-8 text-purple-600 dark:text-purple-400 animate-float" />
-                  <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-purple-500 animate-pulse" />
-                </div>
-                <span className="ml-3 text-xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600 bg-clip-text text-transparent">
-                  Traefik GUI
-                </span>
-              </div>
-              <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
-                {navigation.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'border-purple-500 text-purple-900 dark:text-purple-100 bg-purple-50/50 dark:bg-purple-900/20 rounded-t-lg'
-                          : 'border-transparent text-gray-700 dark:text-gray-300 hover:border-purple-300 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50/30 dark:hover:bg-purple-900/10 rounded-t-lg'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4 mr-2" />
-                      {item.name}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-            
-            {/* Dark Mode Toggle */}
-            <div className="flex items-center">
-              <button
-                onClick={toggleTheme}
-                className="relative p-2 rounded-xl bg-white/20 dark:bg-gray-800/20 backdrop-blur-sm border border-white/30 dark:border-gray-700/30 hover:bg-white/30 dark:hover:bg-gray-800/30 transition-all duration-200 group"
-                aria-label="Toggle dark mode"
-              >
-                <div className="relative w-6 h-6">
-                  <Sun className={`absolute inset-0 h-6 w-6 text-yellow-500 transition-all duration-300 ${
-                    theme === 'dark' ? 'rotate-90 scale-0 opacity-0' : 'rotate-0 scale-100 opacity-100'
-                  }`} />
-                  <Moon className={`absolute inset-0 h-6 w-6 text-purple-400 transition-all duration-300 ${
-                    theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
-                  }`} />
-                </div>
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-400 to-pink-400 opacity-0 group-hover:opacity-20 transition-opacity duration-200" />
-              </button>
-            </div>
-          </div>
+  const currentPage = navigation.find(item => item.href === location.pathname)?.name || 'Dashboard';
+
+  return (
+    <div className="min-h-screen flex bg-[var(--bg-primary)]">
+      {/* Sidebar */}
+      <nav className={`fixed top-0 bottom-0 left-0 z-10 flex flex-col bg-[var(--bg-sidebar)] border-r border-[var(--border)] transition-all duration-200 ${collapsed ? 'w-16' : 'w-60'}`}>
+        {/* Logo */}
+        <div className="px-4 py-5 border-b border-[var(--border)] flex items-center gap-3">
+          <Settings className="w-7 h-7 text-accent-teal flex-shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="font-mono font-bold text-base text-accent-teal tracking-tight">traefik</span>
+              <span className="ml-auto text-[10px] text-[var(--text-muted)] bg-[var(--bg-card)] px-1.5 py-0.5 rounded font-mono">v2</span>
+            </>
+          )}
         </div>
+
+        {/* Navigation */}
+        <div className="flex-1 py-4 px-2 overflow-y-auto">
+          {Object.entries(sections).map(([section, items]) => (
+            <div key={section}>
+              {!collapsed && (
+                <div className="px-3 py-2 mt-2 first:mt-0 text-[10px] uppercase tracking-[1.5px] text-[var(--text-muted)] font-medium">
+                  {section}
+                </div>
+              )}
+              {items.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium mb-0.5 transition-all duration-150 ${isActive
+                        ? 'bg-accent-teal/10 text-accent-teal border border-accent-teal/20'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-card)] hover:text-[var(--text-primary)] border border-transparent'
+                      }`}
+                    title={collapsed ? item.name : undefined}
+                  >
+                    <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <span>{item.name}</span>
+                        {item.count !== undefined && (
+                          <span className="ml-auto font-mono text-[11px] text-[var(--text-muted)] bg-[var(--bg-primary)] px-2 py-0.5 rounded-full">
+                            {item.count}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="px-3 py-3 border-t border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] transition-all duration-150 flex items-center justify-center"
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+        </button>
       </nav>
 
-      <main className="relative max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {children}
+      {/* Main content */}
+      <div className={`flex-1 transition-all duration-200 ${collapsed ? 'ml-16' : 'ml-60'}`}>
+        {/* Top bar */}
+        <div className="sticky top-0 z-5 px-8 py-4 border-b border-[var(--border)] bg-[var(--bg-secondary)] backdrop-blur-xl flex items-center justify-between">
+          <div className="text-[13px] text-[var(--text-muted)] flex items-center gap-2">
+            <span>Home</span>
+            <span>›</span>
+            <span className="text-[var(--text-primary)] font-semibold">{currentPage}</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+            <div className="w-2 h-2 rounded-full bg-accent-green animate-pulse-glow" style={{ '--glow-color': '#22c55e' } as React.CSSProperties} />
+            Traefik Connected
+          </div>
         </div>
-      </main>
 
-      {/* Subtle floating orbs */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-400/5 rounded-full blur-3xl animate-float" />
-        <div className="absolute top-3/4 right-1/4 w-80 h-80 bg-pink-500/5 dark:bg-pink-400/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+        {/* Page content */}
+        <main className="p-8">
+          {children}
+        </main>
       </div>
     </div>
   );

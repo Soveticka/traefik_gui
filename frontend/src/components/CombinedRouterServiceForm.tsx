@@ -69,7 +69,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
   // Auto-generate service name based on router name
   useEffect(() => {
     if (routerName) {
-      const serviceName = routerName.endsWith('-router') 
+      const serviceName = routerName.endsWith('-router')
         ? routerName.replace('-router', '-service')
         : `${routerName}-service`;
       setValue('serviceName', serviceName);
@@ -139,30 +139,30 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-        <div className="glass-card rounded-xl p-6">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="text-center mt-2 text-gray-600 dark:text-gray-300">Loading middlewares...</p>
+      <div className="modal-overlay flex items-center justify-center">
+        <div className="card rounded-xl p-6">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-accent-teal border-t-transparent mx-auto"></div>
+          <p className="text-center mt-2 text-[var(--text-secondary)]">Loading middlewares...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-10 mx-auto p-5 border w-11/12 max-w-4xl glass-card rounded-2xl shadow-2xl mb-10">
-        <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="modal-overlay">
+      <div className="modal-card max-w-4xl top-10 mb-10">
+        <div className="flex justify-between items-center pb-4 border-b border-[var(--border)]">
           <div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+            <h3 className="text-xl font-bold text-[var(--text-primary)]">
               Create Router + Service
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
               Create both router and service in a single step
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
@@ -172,13 +172,13 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
           {/* Names Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              <label className="form-label">
                 Router Name
               </label>
               <input
                 {...register('routerName', { required: 'Router name is required' })}
                 type="text"
-                className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                className="form-input"
                 placeholder="my-app-router"
               />
               {errors.routerName && (
@@ -187,13 +187,13 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+              <label className="form-label">
                 Service Name (Auto-generated)
               </label>
               <input
                 {...register('serviceName', { required: 'Service name is required' })}
                 type="text"
-                className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white bg-gray-50 dark:bg-gray-700"
+                className="form-input opacity-70"
                 placeholder="my-app-service"
               />
             </div>
@@ -202,28 +202,28 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Router Configuration */}
             <div className="space-y-6">
-              <h4 className="text-lg font-semibold text-purple-600 dark:text-purple-400 border-b border-purple-200 dark:border-purple-800 pb-2">
+              <h4 className="text-lg font-semibold text-accent-teal border-b border-accent-teal/20 pb-2">
                 Router Configuration
               </h4>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label className="form-label">
                   Entry Points
                 </label>
                 {entryPointFields.map((field, index) => (
                   <div key={field.id} className="flex mt-1 space-x-2">
                     <input
-                      {...register(`entryPoints.${index}.value` as const, { 
-                        required: 'Entry point is required' 
+                      {...register(`entryPoints.${index}.value` as const, {
+                        required: 'Entry point is required'
                       })}
                       type="text"
-                      className="flex-1 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                      className="flex-1 form-input"
                       placeholder="websecure, web"
                     />
                     <button
                       type="button"
                       onClick={() => removeEntryPoint(index)}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      className="px-3 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                       disabled={entryPointFields.length === 1}
                     >
                       Remove
@@ -233,20 +233,20 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                 <button
                   type="button"
                   onClick={() => appendEntryPoint({ value: '' })}
-                  className="mt-2 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="mt-2 px-3 py-1 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Add Entry Point
                 </button>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label className="form-label">
                   Rule
                 </label>
                 <input
                   {...register('rule', { required: 'Rule is required' })}
                   type="text"
-                  className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                  className="form-input"
                   placeholder="Host(`app.example.com`)"
                 />
                 {errors.rule && (
@@ -259,44 +259,44 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                   <input
                     {...register('tlsEnabled')}
                     type="checkbox"
-                    className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                    className="form-checkbox"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Enable TLS</span>
+                  <span className="ml-2 text-sm text-[var(--text-secondary)]">Enable TLS</span>
                 </label>
               </div>
 
               {tlsEnabled && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                  <label className="form-label">
                     Certificate Resolver (Optional)
                   </label>
                   <input
                     {...register('certResolver')}
                     type="text"
-                    className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                    className="form-input"
                     placeholder="cloudflare"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="form-label mb-2">
                   Middlewares
                 </label>
-                <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 dark:bg-gray-800">
+                <div className="space-y-2 max-h-40 overflow-y-auto border border-[var(--border)] rounded-lg p-3 bg-[var(--bg-primary)]">
                   {availableMiddlewares.map((middleware) => (
                     <label key={middleware} className="flex items-center">
                       <input
                         {...register('middlewares')}
                         type="checkbox"
                         value={middleware}
-                        className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                        className="form-checkbox"
                       />
-                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">{middleware}</span>
+                      <span className="ml-2 text-sm text-[var(--text-secondary)]">{middleware}</span>
                     </label>
                   ))}
                   {availableMiddlewares.length === 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-300 italic">
+                    <p className="text-sm text-[var(--text-muted)] italic">
                       No middlewares available
                     </p>
                   )}
@@ -306,18 +306,18 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
 
             {/* Service Configuration */}
             <div className="space-y-6">
-              <h4 className="text-lg font-semibold text-pink-600 dark:text-pink-400 border-b border-pink-200 dark:border-pink-800 pb-2">
+              <h4 className="text-lg font-semibold text-accent-cyan border-b border-accent-cyan/20 pb-2">
                 Service Configuration
               </h4>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label className="form-label">
                   Servers
                 </label>
                 {serverFields.map((field, index) => (
                   <div key={field.id} className="flex mt-1 space-x-2">
                     <input
-                      {...register(`servers.${index}.url` as const, { 
+                      {...register(`servers.${index}.url` as const, {
                         required: 'Server URL is required',
                         pattern: {
                           value: /^https?:\/\/.+/,
@@ -325,13 +325,13 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                         }
                       })}
                       type="text"
-                      className="flex-1 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                      className="flex-1 form-input"
                       placeholder="http://app.lab:8080"
                     />
                     <button
                       type="button"
                       onClick={() => removeServer(index)}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      className="px-3 py-2 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                       disabled={serverFields.length === 1}
                     >
                       Remove
@@ -341,7 +341,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                 <button
                   type="button"
                   onClick={() => appendServer({ url: '' })}
-                  className="mt-2 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  className="mt-2 px-3 py-1 border border-[var(--border)] rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   Add Server
                 </button>
@@ -352,47 +352,47 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                   <input
                     {...register('healthCheckEnabled')}
                     type="checkbox"
-                    className="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                    className="form-checkbox"
                   />
-                  <span className="ml-2 text-sm text-gray-700 dark:text-gray-200">Enable Health Check</span>
+                  <span className="ml-2 text-sm text-[var(--text-secondary)]">Enable Health Check</span>
                 </label>
               </div>
 
               {healthCheckEnabled && (
-                <div className="space-y-3 pl-4 border-l-2 border-purple-200 dark:border-purple-800">
+                <div className="space-y-3 pl-4 border-l-2 border-accent-teal/30">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                    <label className="form-label">
                       Health Check Path
                     </label>
                     <input
                       {...register('healthCheckPath', { required: 'Health check path is required' })}
                       type="text"
-                      className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                      className="form-input"
                       placeholder="/health"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      <label className="form-label">
                         Interval
                       </label>
                       <input
                         {...register('healthCheckInterval')}
                         type="text"
-                        className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                        className="form-input"
                         placeholder="30s"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      <label className="form-label">
                         Timeout
                       </label>
                       <input
                         {...register('healthCheckTimeout')}
                         type="text"
-                        className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                        className="form-input"
                         placeholder="10s"
                       />
                     </div>
@@ -401,30 +401,30 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label className="form-label">
                   Servers Transport (Optional)
                 </label>
                 <input
                   {...register('serversTransport')}
                   type="text"
-                  className="mt-1 block w-full border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-800 dark:text-white"
+                  className="form-input"
                   placeholder="insecure-transport"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-[var(--border)]">
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="btn-secondary"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+              className="btn-primary"
             >
               Create Router + Service
             </button>

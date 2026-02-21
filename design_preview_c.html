@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traefik GUI — Design C: Glassmorphism Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0a0618;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-bg-hover: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-border-hover: rgba(255, 255, 255, 0.15);
+            --text-primary: #f0eef6;
+            --text-secondary: #a8a2c0;
+            --text-muted: #6b6486;
+            --accent-orange: #ff8c42;
+            --accent-teal: #2dd4bf;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --accent-blue: #60a5fa;
+            --accent-green: #4ade80;
+            --accent-yellow: #facc15;
+            --accent-red: #fb7185;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Animated background */
+        .bg-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, #7c3aed 0%, transparent 70%);
+            top: -200px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, #ec4899 0%, transparent 70%);
+            top: 50%;
+            right: -150px;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #2dd4bf 0%, transparent 70%);
+            bottom: -100px;
+            left: 30%;
+            animation-delay: -14s;
+            opacity: 0.25;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(30px, -30px) scale(1.05);
+            }
+
+            66% {
+                transform: translate(-20px, 20px) scale(0.95);
+            }
+        }
+
+        /* Glass nav */
+        .topnav {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            padding: 12px 32px;
+        }
+
+        .topnav-inner {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .topnav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 32px;
+            text-decoration: none;
+        }
+
+        .topnav-logo svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .topnav-logo .logo-gradient {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .topnav-logo span {
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: -0.3px;
+        }
+
+        .topnav-links {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .topnav-link {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .topnav-link:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+        }
+
+        .topnav-link.active {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.15));
+            color: var(--text-primary);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+        }
+
+        .topnav-link svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .topnav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .glass-btn {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-btn:hover {
+            background: var(--glass-bg-hover);
+            border-color: var(--glass-border-hover);
+            color: var(--text-primary);
+        }
+
+        .glass-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Page header */
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            background: var(--glass-bg-hover);
+            border-color: var(--glass-border-hover);
+            transform: translateY(-4px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent 30%, var(--grad-color, transparent) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .stat-card.orange {
+            --grad-color: var(--accent-orange);
+        }
+
+        .stat-card.teal {
+            --grad-color: var(--accent-teal);
+        }
+
+        .stat-card.purple {
+            --grad-color: var(--accent-purple);
+        }
+
+        .stat-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon-wrap {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-wrap.orange {
+            background: rgba(255, 140, 66, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .stat-icon-wrap.teal {
+            background: rgba(45, 212, 191, 0.15);
+            color: var(--accent-teal);
+        }
+
+        .stat-icon-wrap.purple {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-purple);
+        }
+
+        .stat-icon-wrap svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        /* Config panel */
+        .config-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .config-panel h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .config-panel p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        .btn-gradient {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-gradient::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn-gradient:hover::after {
+            opacity: 1;
+        }
+
+        .btn-gradient svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* List header */
+        .list-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .list-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .btn-grad-sm {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+        }
+
+        .btn-grad-sm.orange {
+            background: linear-gradient(135deg, var(--accent-orange), #f59e0b);
+        }
+
+        .btn-grad-sm.orange:hover {
+            box-shadow: 0 4px 20px rgba(255, 140, 66, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-grad-sm.glass {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            backdrop-filter: blur(12px);
+        }
+
+        .btn-grad-sm.glass:hover {
+            background: var(--glass-bg-hover);
+            color: var(--text-primary);
+        }
+
+        .btn-grad-sm svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Search */
+        .search-bar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .search-bar:focus-within {
+            border-color: rgba(168, 85, 247, 0.4);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+        }
+
+        .search-bar svg {
+            color: var(--text-muted);
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        .search-bar input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Glass list */
+        .glass-list-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 18px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .glass-list-item:hover {
+            background: var(--glass-bg-hover);
+            border-color: var(--glass-border-hover);
+            transform: translateX(4px);
+        }
+
+        .item-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .item-rule {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 10px;
+            border-radius: 8px;
+            border: 1px solid;
+            backdrop-filter: blur(8px);
+        }
+
+        .tag-green {
+            color: var(--accent-green);
+            border-color: rgba(74, 222, 128, 0.2);
+            background: rgba(74, 222, 128, 0.08);
+        }
+
+        .tag-blue {
+            color: var(--accent-blue);
+            border-color: rgba(96, 165, 250, 0.2);
+            background: rgba(96, 165, 250, 0.08);
+        }
+
+        .tag-yellow {
+            color: var(--accent-yellow);
+            border-color: rgba(250, 204, 21, 0.2);
+            background: rgba(250, 204, 21, 0.08);
+        }
+
+        .tag-purple {
+            color: var(--accent-purple);
+            border-color: rgba(168, 85, 247, 0.2);
+            background: rgba(168, 85, 247, 0.08);
+        }
+
+        .tag-orange {
+            color: var(--accent-orange);
+            border-color: rgba(255, 140, 66, 0.2);
+            background: rgba(255, 140, 66, 0.08);
+        }
+
+        .tag-teal {
+            color: var(--accent-teal);
+            border-color: rgba(45, 212, 191, 0.2);
+            background: rgba(45, 212, 191, 0.08);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: all 0.2s ease;
+            margin-top: 2px;
+        }
+
+        .glass-list-item:hover .item-actions {
+            opacity: 1;
+        }
+
+        .icon-btn {
+            padding: 7px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .icon-btn.danger:hover {
+            color: var(--accent-red);
+            border-color: rgba(251, 113, 133, 0.2);
+            background: rgba(251, 113, 133, 0.08);
+        }
+
+        .icon-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Design label */
+        .design-label {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+            z-index: 100;
+        }
+
+        .design-label strong {
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="topnav">
+        <div class="topnav-inner">
+            <a class="topnav-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="2">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#ff8c42" />
+                            <stop offset="100%" style="stop-color:#ec4899" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+                <span class="logo-gradient">Traefik GUI</span>
+            </a>
+            <div class="topnav-links">
+                <a class="topnav-link active page-switch" data-page="dashboard">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a class="topnav-link page-switch" data-page="routers">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="16 3 21 3 21 8" />
+                        <line x1="4" y1="20" x2="21" y2="3" />
+                    </svg>
+                    Routers
+                </a>
+                <a class="topnav-link page-switch" data-page="services">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="8" rx="2" />
+                        <rect x="2" y="14" width="20" height="8" rx="2" />
+                    </svg>
+                    Services
+                </a>
+                <a class="topnav-link page-switch" data-page="middlewares">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Middlewares
+                </a>
+            </div>
+            <div class="topnav-right">
+                <button class="glass-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Dashboard -->
+        <div class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Manage your Traefik dynamic configuration with style ✨</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card orange">
+                    <div class="stat-top">
+                        <div class="stat-icon-wrap orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="16 3 21 3 21 8" />
+                                <line x1="4" y1="20" x2="21" y2="3" />
+                            </svg></div>
+                        <div class="stat-label">Routers</div>
+                    </div>
+                    <div class="stat-value">36</div>
+                </div>
+                <div class="stat-card teal">
+                    <div class="stat-top">
+                        <div class="stat-icon-wrap teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="2" y="2" width="20" height="8" rx="2" />
+                                <rect x="2" y="14" width="20" height="8" rx="2" />
+                            </svg></div>
+                        <div class="stat-label">Services</div>
+                    </div>
+                    <div class="stat-value">33</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-top">
+                        <div class="stat-icon-wrap purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                            </svg></div>
+                        <div class="stat-label">Middlewares</div>
+                    </div>
+                    <div class="stat-value">7</div>
+                </div>
+            </div>
+            <div class="config-panel">
+                <h2>Configuration Management</h2>
+                <p>Split your monolithic dynamic.yml file into organized separate files (routers.yml, services.yml,
+                    middlewares.yml) for better organization and maintainability.</p>
+                <button class="btn-gradient">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    Split Configuration Files
+                </button>
+            </div>
+        </div>
+
+        <!-- Routers -->
+        <div class="page" id="page-routers">
+            <div class="list-header">
+                <div class="page-header">
+                    <h1>Routers</h1>
+                    <p>Define how incoming requests are routed to services.</p>
+                </div>
+                <div class="list-actions">
+                    <button class="btn-grad-sm orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Router + Service</button>
+                    <button class="btn-grad-sm glass"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Router Only</button>
+                </div>
+            </div>
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" placeholder="Search routers...">
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">authentik-router</div>
+                    <div class="item-rule">Host(`auth.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">authentik</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-yellow">error-pages</span><span
+                            class="tag tag-yellow">security-headers</span><span class="tag tag-purple">TLS</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">bluemap-router</div>
+                    <div class="item-rule">Host(`map.soveticka.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">bluemap</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-yellow">error-pages</span><span
+                            class="tag tag-yellow">csp-strict</span><span class="tag tag-purple">TLS</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">bytestash-router</div>
+                    <div class="item-rule">Host(`code.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">bytestash</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-yellow">error-pages</span><span
+                            class="tag tag-yellow">security-headers</span><span class="tag tag-purple">TLS</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">cloudreve-router</div>
+                    <div class="item-rule">Host(`cloud.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">cloudreve</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-purple">TLS</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">crafty-router</div>
+                    <div class="item-rule">Host(`crafty.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">crafty</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-yellow">error-pages</span><span
+                            class="tag tag-yellow">security-headers</span><span
+                            class="tag tag-yellow">sslheader</span><span class="tag tag-purple">TLS</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">homeassistant-router</div>
+                    <div class="item-rule">Host(`ha.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">homeassistant</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-purple">TLS</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <div class="page" id="page-services">
+            <div class="list-header">
+                <div class="page-header">
+                    <h1>Services</h1>
+                    <p>Manage backends where requests are forwarded.</p>
+                </div>
+                <div class="list-actions"><button class="btn-grad-sm orange"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Add Service</button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">authentik</div>
+                    <div class="item-rule">http://authentik.lab:9000</div>
+                    <div class="tags"><span class="tag tag-teal">1 server(s)</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">bluemap</div>
+                    <div class="item-rule">http://mc.lab:8100</div>
+                    <div class="tags"><span class="tag tag-teal">1 server(s)</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">crafty</div>
+                    <div class="item-rule">https://crafty.lab:8443</div>
+                    <div class="tags"><span class="tag tag-teal">1 server(s)</span><span
+                            class="tag tag-orange">insecure-transport</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+        </div>
+
+        <!-- Middlewares -->
+        <div class="page" id="page-middlewares">
+            <div class="list-header">
+                <div class="page-header">
+                    <h1>Middlewares</h1>
+                    <p>Modify requests and responses between routers and services.</p>
+                </div>
+                <div class="list-actions"><button class="btn-grad-sm orange"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Add Middleware</button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">error-pages</div>
+                    <div class="item-rule">Error handling for status codes: 400-599</div>
+                    <div class="tags"><span class="tag tag-blue">Error Pages</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">rate-limit</div>
+                    <div class="item-rule">Rate limit: 50/s (burst: 100)</div>
+                    <div class="tags"><span class="tag tag-orange">Rate Limit</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="glass-list-item">
+                <div class="item-content">
+                    <div class="item-name">security-headers</div>
+                    <div class="item-rule">Custom headers: 1 request, 4 response</div>
+                    <div class="tags"><span class="tag tag-purple">Headers</span></div>
+                </div>
+                <div class="item-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="design-label"><strong>Design C</strong> — Glassmorphism Pro</div>
+
+    <script>
+        document.querySelectorAll('.page-switch').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = btn.dataset.page;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('page-' + page).classList.add('active');
+                document.querySelectorAll('.topnav-link').forEach(n => n.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

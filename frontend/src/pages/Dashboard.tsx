@@ -49,112 +49,75 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-accent-teal border-t-transparent"></div>
       </div>
     );
   }
 
+  const statCards = [
+    { label: 'Routers', value: stats.routers, icon: Route, color: 'teal' },
+    { label: 'Services', value: stats.services, icon: Server, color: 'cyan' },
+    { label: 'Middlewares', value: stats.middlewares, icon: Shield, color: 'purple' },
+  ];
+
+  const colorMap: Record<string, { icon: string; border: string; glow: string }> = {
+    teal: {
+      icon: 'bg-accent-teal/15 text-accent-teal',
+      border: 'bg-gradient-to-r from-accent-teal to-transparent',
+      glow: 'hover:shadow-[0_8px_32px_rgba(0,212,170,0.08)]',
+    },
+    cyan: {
+      icon: 'bg-accent-cyan/15 text-accent-cyan',
+      border: 'bg-gradient-to-r from-accent-cyan to-transparent',
+      glow: 'hover:shadow-[0_8px_32px_rgba(14,165,233,0.08)]',
+    },
+    purple: {
+      icon: 'bg-accent-purple/15 text-accent-purple',
+      border: 'bg-gradient-to-r from-accent-purple to-transparent',
+      glow: 'hover:shadow-[0_8px_32px_rgba(139,92,246,0.08)]',
+    },
+  };
+
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          Dashboard
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-          Manage your Traefik dynamic configuration with style ✨
+      {/* Stats grid */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+        {statCards.map(({ label, value, icon: Icon, color }) => {
+          const colors = colorMap[color];
+          return (
+            <div
+              key={label}
+              className={`stat-card ${colors.glow} hover:border-[var(--border-hover)] hover:-translate-y-0.5`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs uppercase tracking-wider text-[var(--text-muted)] font-medium">
+                  {label}
+                </span>
+                <div className={`p-2.5 rounded-xl ${colors.icon}`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="font-mono text-4xl font-bold text-[var(--text-primary)] tracking-tight">
+                {value}
+              </div>
+              <div className={`mt-4 h-0.5 rounded-full ${colors.border}`} />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Configuration Management */}
+      <div className="card rounded-xl p-7">
+        <h2 className="text-base font-semibold text-[var(--text-primary)] mb-2">
+          Configuration Management
+        </h2>
+        <p className="text-[13px] text-[var(--text-secondary)] mb-5 max-w-lg leading-relaxed">
+          Split your monolithic dynamic.yml file into organized separate files (routers.yml, services.yml, middlewares.yml) for better organization and maintainability.
         </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <div className="glass-card rounded-xl overflow-hidden transform hover:scale-105 transition-all duration-200">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl">
-                  <Route className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
-                    Routers
-                  </dt>
-                  <dd className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.routers}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            <div className="mt-4 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full" />
-          </div>
-        </div>
-
-        <div className="glass-card rounded-xl overflow-hidden transform hover:scale-105 transition-all duration-200">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl">
-                  <Server className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
-                    Services
-                  </dt>
-                  <dd className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.services}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            <div className="mt-4 h-1 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full" />
-          </div>
-        </div>
-
-        <div className="glass-card rounded-xl overflow-hidden transform hover:scale-105 transition-all duration-200">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate">
-                    Middlewares
-                  </dt>
-                  <dd className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats.middlewares}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-            <div className="mt-4 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full" />
-          </div>
-        </div>
-      </div>
-
-      <div className="glass-card rounded-2xl p-8">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Configuration Management</h2>
-          <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Split your monolithic dynamic.yml file into organized separate files (routers.yml, services.yml, middlewares.yml) 
-            for better organization and maintainability.
-          </p>
-        </div>
-        
-        <div className="flex justify-center">
-          <button
-            onClick={handleSplitConfig}
-            className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500/50"
-          >
-            <FileText className="h-5 w-5 mr-3" />
-            Split Configuration Files
-            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-          </button>
-        </div>
+        <button onClick={handleSplitConfig} className="btn-primary">
+          <FileText className="w-4 h-4" />
+          Split Configuration Files
+        </button>
       </div>
     </div>
   );

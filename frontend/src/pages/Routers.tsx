@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, ExternalLink, Layers } from 'lucide-react';
+import { Plus, Edit, Trash2, ExternalLink, Layers, Search } from 'lucide-react';
 import { routersApi, combinedApi } from '../services/api';
 import { TraefikRouter, TraefikService } from '../types/traefik';
 import RouterForm from '../components/RouterForm';
@@ -12,6 +12,7 @@ const Routers = () => {
   const [showForm, setShowForm] = useState(false);
   const [showCombinedForm, setShowCombinedForm] = useState(false);
   const [editingRouter, setEditingRouter] = useState<{ name: string; data: TraefikRouter } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchRouters();
@@ -88,107 +89,119 @@ const Routers = () => {
     setShowCombinedForm(false);
   };
 
+  // Filter routers by search query
+  const filteredRouters = Object.entries(routers).filter(([name, router]) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      name.toLowerCase().includes(q) ||
+      router.rule.toLowerCase().includes(q) ||
+      router.service.toLowerCase().includes(q)
+    );
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-accent-teal border-t-transparent"></div>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="sm:flex sm:items-center mb-8">
-        <div className="sm:flex-auto">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent mb-2">
-            Routers
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-[22px] font-bold text-[var(--text-primary)] mb-1">Routers</h1>
+          <p className="text-sm text-[var(--text-secondary)]">
             Manage your Traefik routers that define how incoming requests are routed to services.
           </p>
         </div>
-        <div className="mt-6 sm:mt-0 sm:ml-16 sm:flex-none flex space-x-3">
+        <div className="flex gap-2.5 flex-shrink-0 ml-8">
           <button
             type="button"
             onClick={() => setShowCombinedForm(true)}
-            className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-purple-500/50"
+            className="btn-primary"
           >
-            <Layers className="h-4 w-4 mr-2" />
+            <Layers className="h-4 w-4" />
             Router + Service
-            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </button>
-
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="group relative inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6 py-3 text-sm font-semibold text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-500/50"
+            className="btn-secondary"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4" />
             Router Only
-            <div className="absolute inset-0 rounded-xl bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
           </button>
         </div>
       </div>
 
-      <div className="glass-card rounded-2xl overflow-hidden">
-        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-          {Object.entries(routers).map(([name, router]) => (
-            <li key={name} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors duration-150">
-              <div className="px-6 py-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-base font-semibold text-purple-600 dark:text-purple-400 truncate">
-                      {name}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      {router.rule}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {router.service}
-                      </span>
-                      {router.entryPoints?.map((entryPoint) => (
-                        <span key={entryPoint} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {entryPoint}
-                        </span>
-                      ))}
-                      {router.middlewares?.map((middleware) => (
-                        <span key={middleware} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                          {middleware}
-                        </span>
-                      ))}
-                      {router.tls && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          TLS
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleEdit(name, router)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(name)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
+      {/* Search */}
+      <div className="search-bar">
+        <Search className="w-4 h-4 text-[var(--text-muted)]" />
+        <input
+          type="text"
+          placeholder="Search routers... (name, host, service)"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {/* Router list */}
+      <div className="list-container">
+        {filteredRouters.map(([name, router]) => (
+          <div key={name} className="list-item group">
+            <div className="status-dot" />
+            <div className="flex-1 min-w-0">
+              <p className="font-mono text-sm font-semibold text-accent-teal truncate">
+                {name}
+              </p>
+              <p className="font-mono text-xs text-[var(--text-muted)] mt-0.5">
+                {router.rule}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <span className="tag tag-green">{router.service}</span>
+                {router.entryPoints?.map((entryPoint) => (
+                  <span key={entryPoint} className="tag tag-blue">
+                    {entryPoint}
+                  </span>
+                ))}
+                {router.middlewares?.map((middleware) => (
+                  <span key={middleware} className="tag tag-yellow">
+                    {middleware}
+                  </span>
+                ))}
+                {router.tls && (
+                  <span className="tag tag-purple">TLS</span>
+                )}
               </div>
-            </li>
-          ))}
-        </ul>
-        {Object.keys(routers).length === 0 && (
+            </div>
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+              <button
+                onClick={() => handleEdit(name, router)}
+                className="icon-btn"
+              >
+                <Edit className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={() => handleDelete(name)}
+                className="icon-btn icon-btn-danger"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+        {filteredRouters.length === 0 && (
           <div className="text-center py-12">
-            <ExternalLink className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No routers</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              Get started by creating a new router.
+            <ExternalLink className="mx-auto h-10 w-10 text-[var(--text-muted)]" />
+            <h3 className="mt-2 text-sm font-medium text-[var(--text-primary)]">
+              {searchQuery ? 'No matching routers' : 'No routers'}
+            </h3>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              {searchQuery ? 'Try a different search term.' : 'Get started by creating a new router.'}
             </p>
           </div>
         )}

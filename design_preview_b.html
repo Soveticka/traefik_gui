@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traefik GUI — Design B: Clean Minimal</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #fafbfc;
+            --bg-card: #ffffff;
+            --bg-hover: #f6f8fa;
+            --border: #e1e4e8;
+            --border-hover: #d0d7de;
+            --text-primary: #1f2328;
+            --text-secondary: #656d76;
+            --text-muted: #8b949e;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fef3c7;
+            --accent-rose: #e11d48;
+            --accent-rose-bg: #ffe4e6;
+            --accent-violet: #7c3aed;
+            --accent-violet-bg: #ede9fe;
+            --accent-green: #16a34a;
+            --accent-green-bg: #dcfce7;
+            --accent-blue: #2563eb;
+            --accent-blue-bg: #dbeafe;
+            --accent-slate: #475569;
+            --radius: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navigation */
+        .topnav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            height: 56px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .topnav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-right: 40px;
+            text-decoration: none;
+        }
+
+        .topnav-logo svg {
+            width: 24px;
+            height: 24px;
+            color: var(--accent-violet);
+        }
+
+        .topnav-logo span {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .topnav-links {
+            display: flex;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .topnav-link {
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .topnav-link:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .topnav-link.active {
+            background: var(--accent-violet-bg);
+            color: var(--accent-violet);
+        }
+
+        .topnav-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .topnav-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .theme-toggle {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .theme-toggle svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Content */
+        .content {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Page header */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Stats grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.15s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+        }
+
+        .stat-card.amber::before {
+            background: var(--accent-amber);
+        }
+
+        .stat-card.rose::before {
+            background: var(--accent-rose);
+        }
+
+        .stat-card.violet::before {
+            background: var(--accent-violet);
+        }
+
+        .stat-icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon-wrap.amber {
+            background: var(--accent-amber-bg);
+            color: var(--accent-amber);
+        }
+
+        .stat-icon-wrap.rose {
+            background: var(--accent-rose-bg);
+            color: var(--accent-rose);
+        }
+
+        .stat-icon-wrap.violet {
+            background: var(--accent-violet-bg);
+            color: var(--accent-violet);
+        }
+
+        .stat-icon-wrap svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .stat-info {}
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+        }
+
+        /* Config section */
+        .config-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 32px;
+        }
+
+        .config-section h2 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .config-section p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+            max-width: 500px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 18px;
+            background: var(--accent-violet);
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary:hover {
+            background: #6d28d9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        /* List header */
+        .list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-action.amber {
+            background: var(--accent-amber);
+            color: white;
+        }
+
+        .btn-action.amber:hover {
+            background: #b45309;
+        }
+
+        .btn-action.outline {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-action.outline:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-hover);
+        }
+
+        .btn-action svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .list-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Search */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            transition: all 0.15s ease;
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--accent-violet);
+            box-shadow: 0 0 0 3px var(--accent-violet-bg);
+        }
+
+        .search-bar svg {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .search-bar input {
+            flex: 1;
+            border: none;
+            background: none;
+            font-size: 13px;
+            color: var(--text-primary);
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-bar input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* List cards */
+        .list-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+
+        .list-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-hover);
+        }
+
+        .list-card-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .list-card-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+
+        .list-card-sub {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .tag {
+            font-size: 11px;
+            font-weight: 500;
+            padding: 3px 10px;
+            border-radius: 6px;
+            border: 1px solid;
+        }
+
+        .tag-green {
+            color: var(--accent-green);
+            border-color: #bbf7d0;
+            background: var(--accent-green-bg);
+        }
+
+        .tag-blue {
+            color: var(--accent-blue);
+            border-color: #bfdbfe;
+            background: var(--accent-blue-bg);
+        }
+
+        .tag-amber {
+            color: var(--accent-amber);
+            border-color: #fde68a;
+            background: var(--accent-amber-bg);
+        }
+
+        .tag-violet {
+            color: var(--accent-violet);
+            border-color: #c4b5fd;
+            background: var(--accent-violet-bg);
+        }
+
+        .tag-rose {
+            color: var(--accent-rose);
+            border-color: #fecdd3;
+            background: var(--accent-rose-bg);
+        }
+
+        .list-card-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: all 0.15s ease;
+            margin-top: 2px;
+        }
+
+        .list-card:hover .list-card-actions {
+            opacity: 1;
+        }
+
+        .icon-btn {
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg);
+            border-color: var(--border);
+            color: var(--text-primary);
+        }
+
+        .icon-btn.danger:hover {
+            color: var(--accent-rose);
+            border-color: var(--accent-rose-bg);
+            background: #fff1f2;
+        }
+
+        .icon-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        /* Design label */
+        .design-label {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 12px;
+            color: var(--text-muted);
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .design-label strong {
+            color: var(--accent-violet);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Navigation -->
+    <nav class="topnav">
+        <a class="topnav-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+            <span>Traefik GUI</span>
+        </a>
+        <div class="topnav-links">
+            <a class="topnav-link active page-switch" data-page="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                Dashboard
+            </a>
+            <a class="topnav-link page-switch" data-page="routers">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="16 3 21 3 21 8" />
+                    <line x1="4" y1="20" x2="21" y2="3" />
+                </svg>
+                Routers
+            </a>
+            <a class="topnav-link page-switch" data-page="services">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2" />
+                    <rect x="2" y="14" width="20" height="8" rx="2" />
+                </svg>
+                Services
+            </a>
+            <a class="topnav-link page-switch" data-page="middlewares">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                Middlewares
+            </a>
+        </div>
+        <div class="topnav-right">
+            <button class="theme-toggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Dashboard -->
+        <div class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h1>Dashboard</h1>
+                <p>Manage your Traefik dynamic configuration.</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card amber">
+                    <div class="stat-icon-wrap amber">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 3 21 3 21 8" />
+                            <line x1="4" y1="20" x2="21" y2="3" />
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Routers</div>
+                        <div class="stat-value">36</div>
+                    </div>
+                </div>
+                <div class="stat-card rose">
+                    <div class="stat-icon-wrap rose">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="2" width="20" height="8" rx="2" />
+                            <rect x="2" y="14" width="20" height="8" rx="2" />
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Services</div>
+                        <div class="stat-value">33</div>
+                    </div>
+                </div>
+                <div class="stat-card violet">
+                    <div class="stat-icon-wrap violet">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-label">Middlewares</div>
+                        <div class="stat-value">7</div>
+                    </div>
+                </div>
+            </div>
+            <div class="config-section">
+                <h2>Configuration Management</h2>
+                <p>Split your monolithic dynamic.yml file into organized separate files (routers.yml, services.yml,
+                    middlewares.yml) for better organization and maintainability.</p>
+                <button class="btn-primary">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    Split Configuration Files
+                </button>
+            </div>
+        </div>
+
+        <!-- Routers -->
+        <div class="page" id="page-routers">
+            <div class="list-header">
+                <div class="page-header" style="display:block;margin-bottom:0">
+                    <h1>Routers</h1>
+                    <p>Manage your Traefik routers that define how incoming requests are routed to services.</p>
+                </div>
+                <div class="list-actions">
+                    <button class="btn-action amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Router + Service</button>
+                    <button class="btn-action outline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Router Only</button>
+                </div>
+            </div>
+            <div class="search-bar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" placeholder="Search routers...">
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">authentik-router</div>
+                    <div class="list-card-sub">Host(`auth.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">authentik</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-amber">error-pages</span><span
+                            class="tag tag-amber">security-headers</span><span class="tag tag-violet">TLS</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">bluemap-router</div>
+                    <div class="list-card-sub">Host(`map.soveticka.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">bluemap</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-amber">error-pages</span><span
+                            class="tag tag-amber">csp-strict</span><span class="tag tag-violet">TLS</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">bytestash-router</div>
+                    <div class="list-card-sub">Host(`code.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">bytestash</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-amber">error-pages</span><span
+                            class="tag tag-amber">security-headers</span><span class="tag tag-violet">TLS</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">cloudreve-router</div>
+                    <div class="list-card-sub">Host(`cloud.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">cloudreve</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-violet">TLS</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">crafty-router</div>
+                    <div class="list-card-sub">Host(`crafty.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">crafty</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-amber">error-pages</span><span
+                            class="tag tag-amber">security-headers</span><span
+                            class="tag tag-amber">sslheader</span><span class="tag tag-violet">TLS</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">homeassistant-router</div>
+                    <div class="list-card-sub">Host(`ha.mkomanek.eu`)</div>
+                    <div class="tags"><span class="tag tag-green">homeassistant</span><span
+                            class="tag tag-blue">websecure</span><span class="tag tag-violet">TLS</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <div class="page" id="page-services">
+            <div class="list-header">
+                <div class="page-header" style="display:block;margin-bottom:0">
+                    <h1>Services</h1>
+                    <p>Manage your Traefik services that define the actual backends.</p>
+                </div>
+                <div class="list-actions"><button class="btn-action amber"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Add Service</button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">authentik</div>
+                    <div class="list-card-sub">http://authentik.lab:9000</div>
+                    <div class="tags"><span class="tag tag-green">1 server(s)</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">bluemap</div>
+                    <div class="list-card-sub">http://mc.lab:8100</div>
+                    <div class="tags"><span class="tag tag-green">1 server(s)</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">crafty</div>
+                    <div class="list-card-sub">https://crafty.lab:8443</div>
+                    <div class="tags"><span class="tag tag-green">1 server(s)</span><span
+                            class="tag tag-amber">insecure-transport</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+        </div>
+
+        <!-- Middlewares -->
+        <div class="page" id="page-middlewares">
+            <div class="list-header">
+                <div class="page-header" style="display:block;margin-bottom:0">
+                    <h1>Middlewares</h1>
+                    <p>Manage your Traefik middlewares that modify requests and responses.</p>
+                </div>
+                <div class="list-actions"><button class="btn-action amber"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>Add Middleware</button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">error-pages</div>
+                    <div class="list-card-sub">Error handling for status codes: 400-599</div>
+                    <div class="tags"><span class="tag tag-blue">Error Pages</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">rate-limit</div>
+                    <div class="list-card-sub">Rate limit: 50/s (burst: 100)</div>
+                    <div class="tags"><span class="tag tag-amber">Rate Limit</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+            <div class="list-card">
+                <div class="list-card-content">
+                    <div class="list-card-name">security-headers</div>
+                    <div class="list-card-sub">Custom headers: 1 request, 4 response</div>
+                    <div class="tags"><span class="tag tag-violet">Headers</span></div>
+                </div>
+                <div class="list-card-actions"><button class="icon-btn"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg></button><button class="icon-btn danger"><svg viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg></button></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="design-label"><strong>Design B</strong> — Clean Minimal</div>
+
+    <script>
+        document.querySelectorAll('.page-switch').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = btn.dataset.page;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('page-' + page).classList.add('active');
+                document.querySelectorAll('.topnav-link').forEach(n => n.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+    </script>
+</body>
+
+</html>
