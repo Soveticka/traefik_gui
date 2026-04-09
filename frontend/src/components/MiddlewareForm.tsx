@@ -12,51 +12,79 @@ interface MiddlewareFormProps {
 interface FormData {
   name: string;
   type: 'errors' | 'rateLimit' | 'headers' | 'redirectRegex';
-  // Error Pages
   errorQuery: string;
   errorService: string;
   errorStatus: { value: string }[];
-  // Rate Limit
   rateLimitAverage: number;
   rateLimitBurst: number;
-  // Headers
   requestHeaders: { key: string; value: string }[];
   responseHeaders: { key: string; value: string }[];
-  // Redirect Regex
   redirectPermanent: boolean;
   redirectRegex: string;
   redirectReplacement: string;
 }
 
+const SECURITY_HEADERS: Array<{ key: string; value: string }> = [
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'X-XSS-Protection', value: '1; mode=block' },
+  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+];
+
 const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) => {
-  const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors, dirtyFields },
+  } = useForm<FormData>({
     defaultValues: {
       name: '',
       type: 'headers',
       errorQuery: '/{status}',
       errorService: '',
       errorStatus: [{ value: '400-599' }],
-      rateLimitAverage: 50,
-      rateLimitBurst: 100,
+      rateLimitAverage: 100,
+      rateLimitBurst: 200,
       requestHeaders: [],
-      responseHeaders: [],
+      responseHeaders: SECURITY_HEADERS,
       redirectPermanent: true,
-      redirectRegex: '',
-      redirectReplacement: '',
+      redirectRegex: '^http://(.*)',
+      redirectReplacement: 'https://$1',
     },
   });
 
-  const { fields: errorStatusFields, append: appendErrorStatus, remove: removeErrorStatus } = useFieldArray({
+  const {
+    fields: errorStatusFields,
+    append: appendErrorStatus,
+    remove: removeErrorStatus,
+    replace: replaceErrorStatus,
+  } = useFieldArray({
     control,
     name: 'errorStatus',
   });
 
-  const { fields: requestHeaderFields, append: appendRequestHeader, remove: removeRequestHeader } = useFieldArray({
+  const {
+    fields: requestHeaderFields,
+    append: appendRequestHeader,
+    remove: removeRequestHeader,
+    replace: replaceRequestHeaders,
+  } = useFieldArray({
     control,
     name: 'requestHeaders',
   });
 
-  const { fields: responseHeaderFields, append: appendResponseHeader, remove: removeResponseHeader } = useFieldArray({
+  const {
+    fields: responseHeaderFields,
+    append: appendResponseHeader,
+    remove: removeResponseHeader,
+    replace: replaceResponseHeaders,
+  } = useFieldArray({
     control,
     name: 'responseHeaders',
   });
@@ -78,7 +106,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
           type,
           errorQuery: data.errors.query,
           errorService: data.errors.service,
-          errorStatus: data.errors.status.map(s => ({ value: s })),
+          errorStatus: data.errors.status.map((s) => ({ value: s })),
         };
       } else if (data.rateLimit) {
         type = 'rateLimit';
@@ -108,8 +136,59 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
       }
 
       reset(formData as FormData);
+      return;
     }
+
+    reset({
+      name: '',
+      type: 'headers',
+      errorQuery: '/{status}',
+      errorService: '',
+      errorStatus: [{ value: '400-599' }],
+      rateLimitAverage: 100,
+      rateLimitBurst: 200,
+      requestHeaders: [],
+      responseHeaders: SECURITY_HEADERS,
+      redirectPermanent: true,
+      redirectRegex: '^http://(.*)',
+      redirectReplacement: 'https://$1',
+    });
   }, [middleware, reset]);
+
+  const setNameIfNotEdited = (nextName: string) => {
+    if (!dirtyFields.name) {
+      setValue('name', nextName, { shouldDirty: false });
+    }
+  };
+
+  const applySecurityHeadersPreset = () => {
+    setValue('type', 'headers', { shouldDirty: true });
+    replaceRequestHeaders([]);
+    replaceResponseHeaders(SECURITY_HEADERS);
+    setNameIfNotEdited('security-headers');
+  };
+
+  const applyRateLimitPreset = () => {
+    setValue('type', 'rateLimit', { shouldDirty: true });
+    setValue('rateLimitAverage', 100, { shouldDirty: true });
+    setValue('rateLimitBurst', 200, { shouldDirty: true });
+    setNameIfNotEdited('rate-limit');
+  };
+
+  const applyErrorPagesPreset = () => {
+    setValue('type', 'errors', { shouldDirty: true });
+    setValue('errorQuery', '/{status}', { shouldDirty: true });
+    replaceErrorStatus([{ value: '400-599' }]);
+    setNameIfNotEdited('error-pages');
+  };
+
+  const applyHttpsRedirectPreset = () => {
+    setValue('type', 'redirectRegex', { shouldDirty: true });
+    setValue('redirectPermanent', true, { shouldDirty: true });
+    setValue('redirectRegex', '^http://(.*)', { shouldDirty: true });
+    setValue('redirectReplacement', 'https://$1', { shouldDirty: true });
+    setNameIfNotEdited('https-redirect');
+  };
 
   const onSubmit = (data: FormData) => {
     const middlewareData: TraefikMiddleware = {};
@@ -119,7 +198,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
         middlewareData.errors = {
           query: data.errorQuery,
           service: data.errorService,
-          status: data.errorStatus.map(s => s.value).filter(Boolean),
+          status: data.errorStatus.map((s) => s.value).filter(Boolean),
         };
         break;
       case 'rateLimit':
@@ -174,26 +253,56 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
           </button>
         </div>
 
+        {!middleware && (
+          <div className="mb-5 p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)]">
+            <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-2">Quick Presets</p>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={applySecurityHeadersPreset}
+                className="px-3 py-1.5 text-sm rounded-md border border-accent-cyan/40 text-accent-cyan hover:bg-accent-cyan/10"
+              >
+                Security Headers
+              </button>
+              <button
+                type="button"
+                onClick={applyRateLimitPreset}
+                className="px-3 py-1.5 text-sm rounded-md border border-accent-yellow/40 text-accent-yellow hover:bg-accent-yellow/10"
+              >
+                Rate Limit
+              </button>
+              <button
+                type="button"
+                onClick={applyErrorPagesPreset}
+                className="px-3 py-1.5 text-sm rounded-md border border-accent-red/40 text-accent-red hover:bg-accent-red/10"
+              >
+                Error Pages
+              </button>
+              <button
+                type="button"
+                onClick={applyHttpsRedirectPreset}
+                className="px-3 py-1.5 text-sm rounded-md border border-accent-purple/40 text-accent-purple hover:bg-accent-purple/10"
+              >
+                HTTP to HTTPS Redirect
+              </button>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label className="form-label">
-              Middleware Name
-            </label>
+            <label className="form-label">Middleware Name</label>
             <input
               {...register('name', { required: 'Middleware name is required' })}
               type="text"
               className="form-input"
               disabled={!!middleware}
             />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
           </div>
 
           <div>
-            <label className="form-label">
-              Middleware Type
-            </label>
+            <label className="form-label">Middleware Type</label>
             <select
               {...register('type', { required: 'Middleware type is required' })}
               className="form-input"
@@ -211,9 +320,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
               <h4 className="text-sm font-medium text-[var(--text-primary)]">Error Pages Configuration</h4>
 
               <div>
-                <label className="form-label">
-                  Query Template
-                </label>
+                <label className="form-label">Query Template</label>
                 <input
                   {...register('errorQuery', { required: 'Query template is required' })}
                   type="text"
@@ -223,9 +330,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
               </div>
 
               <div>
-                <label className="form-label">
-                  Error Service
-                </label>
+                <label className="form-label">Error Service</label>
                 <input
                   {...register('errorService', { required: 'Error service is required' })}
                   type="text"
@@ -235,14 +340,12 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
               </div>
 
               <div>
-                <label className="form-label">
-                  Status Codes
-                </label>
+                <label className="form-label">Status Codes</label>
                 {errorStatusFields.map((field, index) => (
                   <div key={field.id} className="flex mt-1 space-x-2">
                     <input
                       {...register(`errorStatus.${index}.value` as const, {
-                        required: 'Status code is required'
+                        required: 'Status code is required',
                       })}
                       type="text"
                       className="flex-1 form-input"
@@ -275,14 +378,12 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="form-label">
-                    Average (requests/second)
-                  </label>
+                  <label className="form-label">Average (requests/second)</label>
                   <input
                     {...register('rateLimitAverage', {
                       required: 'Average rate is required',
                       valueAsNumber: true,
-                      min: 1
+                      min: 1,
                     })}
                     type="number"
                     className="form-input"
@@ -290,14 +391,12 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
                 </div>
 
                 <div>
-                  <label className="form-label">
-                    Burst
-                  </label>
+                  <label className="form-label">Burst</label>
                   <input
                     {...register('rateLimitBurst', {
                       required: 'Burst limit is required',
                       valueAsNumber: true,
-                      min: 1
+                      min: 1,
                     })}
                     type="number"
                     className="form-input"
@@ -312,9 +411,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
               <h4 className="text-sm font-medium text-[var(--text-primary)]">Headers Configuration</h4>
 
               <div>
-                <label className="form-label mb-2">
-                  Custom Request Headers
-                </label>
+                <label className="form-label mb-2">Custom Request Headers</label>
                 {requestHeaderFields.map((field, index) => (
                   <div key={field.id} className="flex mt-1 space-x-2">
                     <input
@@ -348,9 +445,7 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
               </div>
 
               <div>
-                <label className="form-label mb-2">
-                  Custom Response Headers
-                </label>
+                <label className="form-label mb-2">Custom Response Headers</label>
                 {responseHeaderFields.map((field, index) => (
                   <div key={field.id} className="flex mt-1 space-x-2">
                     <input
@@ -391,53 +486,38 @@ const MiddlewareForm = ({ middleware, onSave, onClose }: MiddlewareFormProps) =>
 
               <div>
                 <label className="flex items-center">
-                  <input
-                    {...register('redirectPermanent')}
-                    type="checkbox"
-                    className="form-checkbox"
-                  />
+                  <input {...register('redirectPermanent')} type="checkbox" className="form-checkbox" />
                   <span className="ml-2 text-sm text-[var(--text-secondary)]">Permanent Redirect (301)</span>
                 </label>
               </div>
 
               <div>
-                <label className="form-label">
-                  Regex Pattern
-                </label>
+                <label className="form-label">Regex Pattern</label>
                 <input
                   {...register('redirectRegex', { required: 'Regex pattern is required' })}
                   type="text"
                   className="form-input"
-                  placeholder=".*"
+                  placeholder="^http://(.*)"
                 />
               </div>
 
               <div>
-                <label className="form-label">
-                  Replacement URL
-                </label>
+                <label className="form-label">Replacement URL</label>
                 <input
                   {...register('redirectReplacement', { required: 'Replacement URL is required' })}
                   type="text"
                   className="form-input"
-                  placeholder="https://example.com"
+                  placeholder="https://$1"
                 />
               </div>
             </div>
           )}
 
           <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="btn-secondary"
-            >
+            <button type="button" onClick={onClose} className="btn-secondary">
               Cancel
             </button>
-            <button
-              type="submit"
-              className="btn-primary"
-            >
+            <button type="submit" className="btn-primary">
               {middleware ? 'Update' : 'Create'} Middleware
             </button>
           </div>
