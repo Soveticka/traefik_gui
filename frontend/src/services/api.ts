@@ -8,8 +8,6 @@ const API_CONFIG = {
   defaultHeaders: {
     'Content-Type': 'application/json',
   },
-  bearerToken: import.meta.env.VITE_TRAEFIK_BEARER_TOKEN || '',
-  apiKey: import.meta.env.VITE_TRAEFIK_API_KEY || '',
 };
 
 const api = axios.create({
@@ -17,8 +15,6 @@ const api = axios.create({
   timeout: API_CONFIG.timeout,
   headers: {
     ...API_CONFIG.defaultHeaders,
-    ...(API_CONFIG.bearerToken && { 'Authorization': `Bearer ${API_CONFIG.bearerToken}` }),
-    ...(API_CONFIG.apiKey && { 'X-API-Key': API_CONFIG.apiKey }),
   },
 });
 
@@ -55,4 +51,8 @@ export const combinedApi = {
     router: TraefikRouter;
     service: TraefikService;
   }) => api.post('/combined/router-service', data),
+};
+
+export const healthApi = {
+  getStatus: () => axios.get<{ status: string; timestamp: string }>('/health', { timeout: API_CONFIG.timeout }),
 };

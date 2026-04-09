@@ -1,52 +1,33 @@
-# Quick Bearer Token Setup
+# API Authentication Setup
 
-## 🔑 For traefik.lab:5000 Bearer Token Authentication
+The GUI no longer stores API secrets in frontend environment variables.
 
-### Step 1: Create Environment File
+## Backend token (recommended)
+
+1. Set a backend token:
 ```bash
-cd frontend
-echo "VITE_TRAEFIK_BEARER_TOKEN=your-bearer-token-here" > .env
+export API_AUTH_TOKEN=replace-with-a-strong-token
 ```
 
-### Step 2: Rebuild Frontend
+2. Start services:
 ```bash
-docker-compose build traefik-gui-frontend
-docker-compose up -d
+docker-compose up -d --build
 ```
 
-### Step 3: Test the Connection
-The GUI will now send requests with this header:
+3. Send the token from your client/proxy to the backend as either:
+```text
+Authorization: Bearer <token>
 ```
-Authorization: Bearer your-bearer-token-here
+or
+```text
+X-API-Key: <token>
 ```
 
-## ✅ That's it!
+## Local development only
 
-Your Traefik GUI will now authenticate with your API using the Bearer token.
+If you are running on a trusted local machine, you can disable backend auth explicitly:
+```bash
+export ALLOW_UNAUTHENTICATED_API=true
+```
 
----
-
-### Alternative: Docker Environment Variable
-
-If you prefer to use docker-compose environment variables:
-
-1. **Create project root `.env`**:
-   ```bash
-   echo "TRAEFIK_BEARER_TOKEN=your-bearer-token-here" > .env
-   ```
-
-2. **Update docker-compose.yml**:
-   ```yaml
-   traefik-gui-frontend:
-     environment:
-       - VITE_TRAEFIK_BEARER_TOKEN=${TRAEFIK_BEARER_TOKEN}
-   ```
-
-3. **Rebuild**:
-   ```bash
-   docker-compose build && docker-compose up -d
-   ```
-
-### 🔍 Debug
-
-Check the browser Network tab to verify the `Authorization: Bearer ...` header is being sent with API requests.
+Do not use `ALLOW_UNAUTHENTICATED_API=true` in shared or exposed environments.

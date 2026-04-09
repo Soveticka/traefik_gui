@@ -86,7 +86,7 @@ const Middlewares = () => {
       return `Custom headers: ${reqHeaders} request, ${resHeaders} response`;
     }
     if (middleware.redirectRegex) {
-      return `Redirect ${middleware.redirectRegex.permanent ? '(permanent)' : '(temporary)'}: ${middleware.redirectRegex.regex} → ${middleware.redirectRegex.replacement}`;
+      return `Redirect ${middleware.redirectRegex.permanent ? '(permanent)' : '(temporary)'}: ${middleware.redirectRegex.regex} -> ${middleware.redirectRegex.replacement}`;
     }
     return 'Custom middleware configuration';
   };

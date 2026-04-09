@@ -114,6 +114,26 @@ rate-limit:
 
 ## Development
 
+### Backend Security Environment
+
+Set a backend API token before starting the server:
+
+```bash
+export API_AUTH_TOKEN=replace-with-a-strong-token
+```
+
+For local-only development you can explicitly disable backend auth:
+
+```bash
+export ALLOW_UNAUTHENTICATED_API=true
+```
+
+Optional CORS override:
+
+```bash
+export CORS_ORIGINS=http://localhost:3000,http://localhost:5173
+```
+
 ```bash
 # Backend development
 cd backend && npm install && npm run dev

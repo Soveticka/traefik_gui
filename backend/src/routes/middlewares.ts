@@ -24,7 +24,9 @@ const middlewareSchema = Joi.object({
     regex: Joi.string().required(),
     replacement: Joi.string().required()
   }).optional()
-});
+})
+  .xor('errors', 'rateLimit', 'headers', 'redirectRegex')
+  .required();
 
 // GET all middlewares
 router.get('/', async (req, res) => {

@@ -9,11 +9,60 @@ import { combinedRouter } from './routes/combined';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const API_AUTH_TOKEN = process.env.API_AUTH_TOKEN;
+const ALLOW_UNAUTHENTICATED_API = process.env.ALLOW_UNAUTHENTICATED_API === 'true';
+const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+if (!ALLOW_UNAUTHENTICATED_API && !API_AUTH_TOKEN) {
+  throw new Error(
+    'API_AUTH_TOKEN must be set (or explicitly set ALLOW_UNAUTHENTICATED_API=true for local development).'
+  );
+}
+
+const requireApiAuth: express.RequestHandler = (req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
+  if (ALLOW_UNAUTHENTICATED_API) {
+    return next();
+  }
+
+  const authHeader = req.header('authorization');
+  const apiKeyHeader = req.header('x-api-key');
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+  const providedToken = bearerToken || apiKeyHeader;
+
+  if (!providedToken || providedToken !== API_AUTH_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  next();
+};
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow same-origin/non-browser clients with no Origin header.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (CORS_ORIGINS.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error('Not allowed by CORS'));
+    },
+  })
+);
 app.use(express.json());
+app.use('/api', requireApiAuth);
 
 // Routes
 app.use('/api/routers', routersRouter);
