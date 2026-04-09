@@ -8,6 +8,7 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  History,
 } from 'lucide-react';
 import { routersApi, servicesApi, middlewaresApi, healthApi } from '../services/api';
 
@@ -57,6 +58,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard, section: 'Overview' },
+    { name: 'Audit Log', href: '/audit', icon: History, section: 'Overview' },
     { name: 'Routers', href: '/routers', icon: Route, section: 'Configuration', count: counts.routers },
     { name: 'Services', href: '/services', icon: Server, section: 'Configuration', count: counts.services },
     { name: 'Middlewares', href: '/middlewares', icon: Shield, section: 'Configuration', count: counts.middlewares },

@@ -170,3 +170,19 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **Built for Soveticka's Lab Environment** 🏠  
 *Designed to work seamlessly with your existing Traefik setup at `traefik.lab:5000`*
+
+## Docker Runtime Notes
+
+- `docker-compose.yml` defaults to `ALLOW_UNAUTHENTICATED_API=true` for local lab/dev usage.
+- `docker-compose.prod.yml` defaults to authenticated mode (`ALLOW_UNAUTHENTICATED_API=false`) and expects `API_AUTH_TOKEN` to be set in your environment.
+- Audit logs are persisted to `/opt/traefik/data/traefik-gui-logs` on the host.
+
+### Compose-Based E2E Tests
+
+Run Playwright tests in containers:
+
+```bash
+docker compose -f docker-compose.e2e.yml run --rm playwright
+```
+
+This spins up the backend with disposable test config/log paths under `./tmp/e2e` and runs the frontend Playwright suite.

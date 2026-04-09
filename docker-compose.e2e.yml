@@ -1,0 +1,38 @@
+
+services:
+  traefik-gui-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CONFIG_PATH=/app/config
+      - DYNAMIC_FILE_PATH=/app/dynamic.yml
+      - AUDIT_LOG_PATH=/app/logs/audit.log
+      - ALLOW_UNAUTHENTICATED_API=true
+    volumes:
+      - ./tmp/e2e/config:/app/config
+      - ./tmp/e2e/dynamic.yml:/app/dynamic.yml
+      - ./tmp/e2e/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.59.0-noble
+    working_dir: /work/frontend
+    depends_on:
+      traefik-gui-backend:
+        condition: service_healthy
+    environment:
+      - PLAYWRIGHT_BACKEND_URL=http://traefik-gui-backend:3001/api/v1
+      - PLAYWRIGHT_BACKEND_HEALTH_URL=http://traefik-gui-backend:3001/health
+      - CI=true
+    volumes:
+      - ./:/work
+    command: >
+      sh -lc "npm ci && npx playwright install chromium && npm run test:e2e"

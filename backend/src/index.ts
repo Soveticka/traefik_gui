@@ -1,11 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import { routersRouter } from './routes/routers';
-import { servicesRouter } from './routes/services';
-import { middlewaresRouter } from './routes/middlewares';
-import { configRouter } from './routes/config';
-import { combinedRouter } from './routes/combined';
+import { apiV1Router } from './routes/v1';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -43,12 +39,10 @@ const requireApiAuth: express.RequestHandler = (req, res, next) => {
   next();
 };
 
-// Middleware
 app.use(helmet());
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow same-origin/non-browser clients with no Origin header.
       if (!origin) {
         return callback(null, true);
       }
@@ -64,15 +58,13 @@ app.use(
 app.use(express.json());
 app.use('/api', requireApiAuth);
 
-// Routes
-app.use('/api/routers', routersRouter);
-app.use('/api/services', servicesRouter);
-app.use('/api/middlewares', middlewaresRouter);
-app.use('/api/config', configRouter);
-app.use('/api/combined', combinedRouter);
+// Versioned API (primary)
+app.use('/api/v1', apiV1Router);
 
-// Health check
-app.get('/health', (req, res) => {
+// Legacy compatibility routes
+app.use('/api', apiV1Router);
+
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 

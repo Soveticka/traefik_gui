@@ -64,4 +64,9 @@ Thumbs.db
 *.bak
 
 # Development files
-*.local
+*.local# Playwright artifacts
+frontend/playwright-report/
+frontend/test-results/
+
+# Local e2e fixtures
+/tmp/

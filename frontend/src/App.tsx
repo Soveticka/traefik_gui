@@ -1,9 +1,10 @@
-import { Routes, Route } from 'react-router-dom'
-import Layout from './components/Layout'
-import Dashboard from './pages/Dashboard'
-import Routers from './pages/Routers'
-import Services from './pages/Services'
-import Middlewares from './pages/Middlewares'
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/Layout';
+import Dashboard from './pages/Dashboard';
+import Routers from './pages/Routers';
+import Services from './pages/Services';
+import Middlewares from './pages/Middlewares';
+import Audit from './pages/Audit';
 
 function App() {
   return (
@@ -13,9 +14,10 @@ function App() {
         <Route path="/routers" element={<Routers />} />
         <Route path="/services" element={<Services />} />
         <Route path="/middlewares" element={<Middlewares />} />
+        <Route path="/audit" element={<Audit />} />
       </Routes>
     </Layout>
-  )
+  );
 }
 
-export default App
+export default App;

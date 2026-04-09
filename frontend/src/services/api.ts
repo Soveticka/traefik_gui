@@ -1,14 +1,15 @@
 import axios from 'axios';
-import { TraefikRouter, TraefikService, TraefikMiddleware } from '../types/traefik';
+import { AuditEvent, TraefikMiddleware, TraefikRouter, TraefikService } from '../types/traefik';
 
-// API Configuration
 const API_CONFIG = {
-  baseURL: '/api',
+  baseURL: '/api/v1',
   timeout: 10000,
   defaultHeaders: {
     'Content-Type': 'application/json',
   },
 };
+
+let configRevision: string | undefined;
 
 const api = axios.create({
   baseURL: API_CONFIG.baseURL,
@@ -16,6 +17,26 @@ const api = axios.create({
   headers: {
     ...API_CONFIG.defaultHeaders,
   },
+});
+
+api.interceptors.response.use((response) => {
+  const revisionHeader = response.headers['x-config-revision'];
+  if (typeof revisionHeader === 'string' && revisionHeader.trim().length > 0) {
+    configRevision = revisionHeader.trim();
+  }
+  return response;
+});
+
+api.interceptors.request.use((request) => {
+  const method = request.method?.toLowerCase();
+  const isMutation = method === 'post' || method === 'put' || method === 'patch' || method === 'delete';
+
+  if (isMutation && configRevision) {
+    request.headers = request.headers ?? {};
+    (request.headers as Record<string, string>)['x-config-revision'] = configRevision;
+  }
+
+  return request;
 });
 
 export const routersApi = {
@@ -41,6 +62,9 @@ export const middlewaresApi = {
 
 export const configApi = {
   getAll: () => api.get('/config'),
+  getAudit: (params?: { action?: string; resource?: string; since?: string; limit?: number }) =>
+    api.get<{ entries: AuditEvent[] }>('/config/audit', { params }),
+  dryRun: (config: unknown) => api.post('/config/dry-run', { config }),
   split: () => api.post('/config/split'),
 };
 

@@ -1,56 +1,37 @@
 import express from 'express';
-import Joi from 'joi';
+import { auditLogService } from '../services/auditLogService';
 import { ConfigService } from '../services/configService';
+import { getActorIp, getExpectedRevision, handleRouteError, setRevisionHeader } from '../utils/routeUtils';
+import { middlewareSchema } from '../validation/schemas';
 
 const router = express.Router();
 const configService = new ConfigService();
 
-const middlewareSchema = Joi.object({
-  errors: Joi.object({
-    query: Joi.string().required(),
-    service: Joi.string().required(),
-    status: Joi.array().items(Joi.string()).required()
-  }).optional(),
-  rateLimit: Joi.object({
-    average: Joi.number().required(),
-    burst: Joi.number().required()
-  }).optional(),
-  headers: Joi.object({
-    customRequestHeaders: Joi.object().pattern(Joi.string(), Joi.string()).optional(),
-    customResponseHeaders: Joi.object().pattern(Joi.string(), Joi.string()).optional()
-  }).optional(),
-  redirectRegex: Joi.object({
-    permanent: Joi.boolean().required(),
-    regex: Joi.string().required(),
-    replacement: Joi.string().required()
-  }).optional()
-})
-  .xor('errors', 'rateLimit', 'headers', 'redirectRegex')
-  .required();
-
 // GET all middlewares
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
-    const middlewares = await configService.loadMiddlewares();
-    res.json(middlewares);
+    const config = await configService.loadFullConfig();
+    setRevisionHeader(res, configService.getRevision(config));
+    res.json(config.http.middlewares || {});
   } catch (error) {
-    res.status(500).json({ error: 'Failed to load middlewares' });
+    handleRouteError(res, error, 'Failed to load middlewares');
   }
 });
 
 // GET specific middleware
 router.get('/:name', async (req, res) => {
   try {
-    const middlewares = await configService.loadMiddlewares();
-    const middleware = middlewares[req.params.name];
-    
+    const config = await configService.loadFullConfig();
+    setRevisionHeader(res, configService.getRevision(config));
+
+    const middleware = config.http.middlewares[req.params.name];
     if (!middleware) {
       return res.status(404).json({ error: 'Middleware not found' });
     }
-    
+
     res.json(middleware);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to load middleware' });
+    handleRouteError(res, error, 'Failed to load middleware');
   }
 });
 
@@ -58,25 +39,50 @@ router.get('/:name', async (req, res) => {
 router.post('/:name', async (req, res) => {
   try {
     const { error, value } = middlewareSchema.validate(req.body);
-    
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-    
-    await configService.saveMiddleware(req.params.name, value);
+
+    const expectedRevision = getExpectedRevision(req);
+    await configService.saveMiddleware(req.params.name, value, expectedRevision);
+
+    const currentRevision = await configService.getCurrentRevision();
+    setRevisionHeader(res, currentRevision);
+
+    auditLogService.log({
+      action: 'middleware.save',
+      resourceName: req.params.name,
+      revision: currentRevision,
+      actorIp: getActorIp(req),
+      actorUserAgent: req.header('user-agent'),
+    });
+
     res.json({ message: 'Middleware saved successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save middleware' });
+    handleRouteError(res, error, 'Failed to save middleware');
   }
 });
 
 // DELETE middleware
 router.delete('/:name', async (req, res) => {
   try {
-    await configService.deleteMiddleware(req.params.name);
+    const expectedRevision = getExpectedRevision(req);
+    await configService.deleteMiddleware(req.params.name, expectedRevision);
+
+    const currentRevision = await configService.getCurrentRevision();
+    setRevisionHeader(res, currentRevision);
+
+    auditLogService.log({
+      action: 'middleware.delete',
+      resourceName: req.params.name,
+      revision: currentRevision,
+      actorIp: getActorIp(req),
+      actorUserAgent: req.header('user-agent'),
+    });
+
     res.json({ message: 'Middleware deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete middleware' });
+    handleRouteError(res, error, 'Failed to delete middleware');
   }
 });
 

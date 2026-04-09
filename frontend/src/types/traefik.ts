@@ -42,3 +42,12 @@ export interface TraefikMiddleware {
     replacement: string;
   };
 }
+
+export interface AuditEvent {
+  timestamp: string;
+  action: string;
+  resourceName?: string;
+  revision?: string;
+  actorIp?: string;
+  actorUserAgent?: string;
+}

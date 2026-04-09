@@ -1,10 +1,22 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { createHash } from 'crypto';
 import YAML from 'yaml';
-import { TraefikConfig, TraefikRouter, TraefikService, TraefikMiddleware } from '../types/traefik';
+import { TraefikConfig, TraefikMiddleware, TraefikRouter, TraefikService } from '../types/traefik';
 
 const DYNAMIC_FILE_PATH = process.env.DYNAMIC_FILE_PATH || './dynamic.yml';
 const CONFIG_PATH = process.env.CONFIG_PATH || './config';
+const BACKUP_DIR_NAME = '.backups';
+
+export class ConfigConflictError extends Error {
+  readonly currentRevision: string;
+
+  constructor(currentRevision: string) {
+    super('Configuration revision mismatch');
+    this.name = 'ConfigConflictError';
+    this.currentRevision = currentRevision;
+  }
+}
 
 export class ConfigService {
   private createEmptyConfig(): TraefikConfig {
@@ -17,7 +29,7 @@ export class ConfigService {
     };
   }
 
-  private normalizeConfig(rawConfig: unknown): TraefikConfig {
+  normalizeConfig(rawConfig: unknown): TraefikConfig {
     const root = (rawConfig && typeof rawConfig === 'object' ? rawConfig : {}) as Record<string, unknown>;
     const http = (root.http && typeof root.http === 'object' ? root.http : {}) as Record<string, unknown>;
 
@@ -45,9 +57,87 @@ export class ConfigService {
     return normalized;
   }
 
+  getRevision(config: TraefikConfig): string {
+    const normalized = this.normalizeConfig(config);
+    const serialized = YAML.stringify(normalized, { indent: 2 });
+    return createHash('sha256').update(serialized, 'utf8').digest('hex');
+  }
+
+  async getCurrentRevision(): Promise<string> {
+    const config = await this.loadFullConfig();
+    return this.getRevision(config);
+  }
+
+  private async assertExpectedRevision(expectedRevision?: string): Promise<void> {
+    if (!expectedRevision) {
+      return;
+    }
+
+    const currentRevision = await this.getCurrentRevision();
+    if (currentRevision !== expectedRevision) {
+      throw new ConfigConflictError(currentRevision);
+    }
+  }
+
   private ensureConfigDir(): void {
     if (!fs.existsSync(CONFIG_PATH)) {
       fs.mkdirSync(CONFIG_PATH, { recursive: true });
+    }
+  }
+
+  private ensureParentDir(filePath: string): void {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+  }
+
+  private ensureBackupDirFor(filePath: string): string {
+    const dir = path.dirname(filePath);
+    const backupDir = path.join(dir, BACKUP_DIR_NAME);
+    if (!fs.existsSync(backupDir)) {
+      fs.mkdirSync(backupDir, { recursive: true });
+    }
+    return backupDir;
+  }
+
+  private writeYamlAtomic(filePath: string, value: unknown): void {
+    this.ensureParentDir(filePath);
+
+    const yamlContent = YAML.stringify(value, { indent: 2 });
+    YAML.parse(yamlContent);
+
+    const tmpPath = `${filePath}.tmp-${Date.now()}`;
+    const hadExistingFile = fs.existsSync(filePath);
+
+    fs.writeFileSync(tmpPath, yamlContent, 'utf8');
+
+    try {
+      if (hadExistingFile) {
+        const backupDir = this.ensureBackupDirFor(filePath);
+        const backupName = `${path.basename(filePath)}.${Date.now()}.bak`;
+        const backupPath = path.join(backupDir, backupName);
+        fs.copyFileSync(filePath, backupPath);
+      }
+
+      try {
+        // Replace in place when possible.
+        fs.renameSync(tmpPath, filePath);
+      } catch (renameError) {
+        const code = (renameError as NodeJS.ErrnoException).code;
+        // Bind-mounted files can fail rename/unlink semantics (e.g., EBUSY/EXDEV on Docker).
+        if (code === 'EBUSY' || code === 'EXDEV' || code === 'EPERM') {
+          fs.writeFileSync(filePath, yamlContent, 'utf8');
+          fs.unlinkSync(tmpPath);
+          return;
+        }
+        throw renameError;
+      }
+    } catch (error) {
+      if (fs.existsSync(tmpPath)) {
+        fs.unlinkSync(tmpPath);
+      }
+      throw error;
     }
   }
 
@@ -70,6 +160,23 @@ export class ConfigService {
           'Restore missing split files or remove split files to use monolithic mode safely.'
       );
     }
+  }
+
+  private buildRoutersConfig(config: TraefikConfig): Record<string, unknown> {
+    return { http: { routers: config.http.routers } };
+  }
+
+  private buildServicesConfig(config: TraefikConfig): Record<string, unknown> {
+    return {
+      http: {
+        services: config.http.services,
+        ...(config.http.serversTransports && { serversTransports: config.http.serversTransports }),
+      },
+    };
+  }
+
+  private buildMiddlewaresConfig(config: TraefikConfig): Record<string, unknown> {
+    return { http: { middlewares: config.http.middlewares } };
   }
 
   async loadFullConfig(): Promise<TraefikConfig> {
@@ -119,8 +226,10 @@ export class ConfigService {
     }
   }
 
-  async saveFullConfig(config: TraefikConfig): Promise<void> {
+  async saveFullConfig(config: TraefikConfig, expectedRevision?: string): Promise<void> {
     this.ensureNoPartialSplitState();
+    await this.assertExpectedRevision(expectedRevision);
+
     const splitState = this.getSplitFileState();
     const normalizedConfig = this.normalizeConfig(config);
 
@@ -129,8 +238,7 @@ export class ConfigService {
     }
 
     try {
-      const yamlContent = YAML.stringify(normalizedConfig, { indent: 2 });
-      fs.writeFileSync(DYNAMIC_FILE_PATH, yamlContent, 'utf8');
+      this.writeYamlAtomic(DYNAMIC_FILE_PATH, normalizedConfig);
     } catch (error) {
       console.error('Error saving config:', error);
       throw new Error('Failed to save configuration');
@@ -142,22 +250,13 @@ export class ConfigService {
     this.ensureNoPartialSplitState();
 
     try {
-      const routersConfig = { http: { routers: config.http.routers } };
       const routersPath = path.join(CONFIG_PATH, 'routers.yml');
-      fs.writeFileSync(routersPath, YAML.stringify(routersConfig, { indent: 2 }), 'utf8');
-
-      const servicesConfig = {
-        http: {
-          services: config.http.services,
-          ...(config.http.serversTransports && { serversTransports: config.http.serversTransports }),
-        },
-      };
       const servicesPath = path.join(CONFIG_PATH, 'services.yml');
-      fs.writeFileSync(servicesPath, YAML.stringify(servicesConfig, { indent: 2 }), 'utf8');
-
-      const middlewaresConfig = { http: { middlewares: config.http.middlewares } };
       const middlewaresPath = path.join(CONFIG_PATH, 'middlewares.yml');
-      fs.writeFileSync(middlewaresPath, YAML.stringify(middlewaresConfig, { indent: 2 }), 'utf8');
+
+      this.writeYamlAtomic(routersPath, this.buildRoutersConfig(config));
+      this.writeYamlAtomic(servicesPath, this.buildServicesConfig(config));
+      this.writeYamlAtomic(middlewaresPath, this.buildMiddlewaresConfig(config));
 
       console.log('Split configuration saved successfully');
     } catch (error) {
@@ -166,27 +265,15 @@ export class ConfigService {
     }
   }
 
-  async splitConfigIntoFiles(config: TraefikConfig): Promise<void> {
+  async splitConfigIntoFiles(config: TraefikConfig, expectedRevision?: string): Promise<void> {
+    await this.assertExpectedRevision(expectedRevision);
     this.ensureConfigDir();
     const normalizedConfig = this.normalizeConfig(config);
 
     try {
-      const routersConfig = { http: { routers: normalizedConfig.http.routers } };
-      const servicesConfig = {
-        http: {
-          services: normalizedConfig.http.services,
-          ...(normalizedConfig.http.serversTransports && { serversTransports: normalizedConfig.http.serversTransports }),
-        },
-      };
-      const middlewaresConfig = { http: { middlewares: normalizedConfig.http.middlewares } };
-
-      fs.writeFileSync(path.join(CONFIG_PATH, 'routers.yml'), YAML.stringify(routersConfig, { indent: 2 }), 'utf8');
-      fs.writeFileSync(path.join(CONFIG_PATH, 'services.yml'), YAML.stringify(servicesConfig, { indent: 2 }), 'utf8');
-      fs.writeFileSync(
-        path.join(CONFIG_PATH, 'middlewares.yml'),
-        YAML.stringify(middlewaresConfig, { indent: 2 }),
-        'utf8'
-      );
+      this.writeYamlAtomic(path.join(CONFIG_PATH, 'routers.yml'), this.buildRoutersConfig(normalizedConfig));
+      this.writeYamlAtomic(path.join(CONFIG_PATH, 'services.yml'), this.buildServicesConfig(normalizedConfig));
+      this.writeYamlAtomic(path.join(CONFIG_PATH, 'middlewares.yml'), this.buildMiddlewaresConfig(normalizedConfig));
 
       console.log('Configuration split into separate files successfully');
     } catch (error) {
@@ -210,39 +297,39 @@ export class ConfigService {
     return config.http.middlewares || {};
   }
 
-  async saveRouter(name: string, router: TraefikRouter): Promise<void> {
+  async saveRouter(name: string, router: TraefikRouter, expectedRevision?: string): Promise<void> {
     const config = await this.loadFullConfig();
     config.http.routers[name] = router;
-    await this.saveFullConfig(config);
+    await this.saveFullConfig(config, expectedRevision);
   }
 
-  async deleteRouter(name: string): Promise<void> {
+  async deleteRouter(name: string, expectedRevision?: string): Promise<void> {
     const config = await this.loadFullConfig();
     delete config.http.routers[name];
-    await this.saveFullConfig(config);
+    await this.saveFullConfig(config, expectedRevision);
   }
 
-  async saveService(name: string, service: TraefikService): Promise<void> {
+  async saveService(name: string, service: TraefikService, expectedRevision?: string): Promise<void> {
     const config = await this.loadFullConfig();
     config.http.services[name] = service;
-    await this.saveFullConfig(config);
+    await this.saveFullConfig(config, expectedRevision);
   }
 
-  async deleteService(name: string): Promise<void> {
+  async deleteService(name: string, expectedRevision?: string): Promise<void> {
     const config = await this.loadFullConfig();
     delete config.http.services[name];
-    await this.saveFullConfig(config);
+    await this.saveFullConfig(config, expectedRevision);
   }
 
-  async saveMiddleware(name: string, middleware: TraefikMiddleware): Promise<void> {
+  async saveMiddleware(name: string, middleware: TraefikMiddleware, expectedRevision?: string): Promise<void> {
     const config = await this.loadFullConfig();
     config.http.middlewares[name] = middleware;
-    await this.saveFullConfig(config);
+    await this.saveFullConfig(config, expectedRevision);
   }
 
-  async deleteMiddleware(name: string): Promise<void> {
+  async deleteMiddleware(name: string, expectedRevision?: string): Promise<void> {
     const config = await this.loadFullConfig();
     delete config.http.middlewares[name];
-    await this.saveFullConfig(config);
+    await this.saveFullConfig(config, expectedRevision);
   }
 }

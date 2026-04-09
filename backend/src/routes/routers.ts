@@ -1,46 +1,37 @@
 import express from 'express';
-import Joi from 'joi';
+import { auditLogService } from '../services/auditLogService';
 import { ConfigService } from '../services/configService';
+import { getActorIp, getExpectedRevision, handleRouteError, setRevisionHeader } from '../utils/routeUtils';
+import { routerSchema } from '../validation/schemas';
 
 const router = express.Router();
 const configService = new ConfigService();
 
-const routerSchema = Joi.object({
-  entryPoints: Joi.array().items(Joi.string()).required(),
-  rule: Joi.string().required(),
-  service: Joi.string().required(),
-  tls: Joi.alternatives().try(
-    Joi.boolean(),
-    Joi.object({
-      certResolver: Joi.string().optional()
-    })
-  ).optional(),
-  middlewares: Joi.array().items(Joi.string()).optional()
-});
-
 // GET all routers
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
   try {
-    const routers = await configService.loadRouters();
-    res.json(routers);
+    const config = await configService.loadFullConfig();
+    setRevisionHeader(res, configService.getRevision(config));
+    res.json(config.http.routers || {});
   } catch (error) {
-    res.status(500).json({ error: 'Failed to load routers' });
+    handleRouteError(res, error, 'Failed to load routers');
   }
 });
 
 // GET specific router
 router.get('/:name', async (req, res) => {
   try {
-    const routers = await configService.loadRouters();
-    const router = routers[req.params.name];
-    
-    if (!router) {
+    const config = await configService.loadFullConfig();
+    setRevisionHeader(res, configService.getRevision(config));
+
+    const foundRouter = config.http.routers[req.params.name];
+    if (!foundRouter) {
       return res.status(404).json({ error: 'Router not found' });
     }
-    
-    res.json(router);
+
+    res.json(foundRouter);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to load router' });
+    handleRouteError(res, error, 'Failed to load router');
   }
 });
 
@@ -48,25 +39,50 @@ router.get('/:name', async (req, res) => {
 router.post('/:name', async (req, res) => {
   try {
     const { error, value } = routerSchema.validate(req.body);
-    
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-    
-    await configService.saveRouter(req.params.name, value);
+
+    const expectedRevision = getExpectedRevision(req);
+    await configService.saveRouter(req.params.name, value, expectedRevision);
+
+    const currentRevision = await configService.getCurrentRevision();
+    setRevisionHeader(res, currentRevision);
+
+    auditLogService.log({
+      action: 'router.save',
+      resourceName: req.params.name,
+      revision: currentRevision,
+      actorIp: getActorIp(req),
+      actorUserAgent: req.header('user-agent'),
+    });
+
     res.json({ message: 'Router saved successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to save router' });
+    handleRouteError(res, error, 'Failed to save router');
   }
 });
 
 // DELETE router
 router.delete('/:name', async (req, res) => {
   try {
-    await configService.deleteRouter(req.params.name);
+    const expectedRevision = getExpectedRevision(req);
+    await configService.deleteRouter(req.params.name, expectedRevision);
+
+    const currentRevision = await configService.getCurrentRevision();
+    setRevisionHeader(res, currentRevision);
+
+    auditLogService.log({
+      action: 'router.delete',
+      resourceName: req.params.name,
+      revision: currentRevision,
+      actorIp: getActorIp(req),
+      actorUserAgent: req.header('user-agent'),
+    });
+
     res.json({ message: 'Router deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete router' });
+    handleRouteError(res, error, 'Failed to delete router');
   }
 });
 
