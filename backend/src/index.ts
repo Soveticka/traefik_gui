@@ -7,10 +7,42 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const API_AUTH_TOKEN = process.env.API_AUTH_TOKEN;
 const ALLOW_UNAUTHENTICATED_API = process.env.ALLOW_UNAUTHENTICATED_API === 'true';
-const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173')
+const CORS_ORIGINS = (
+  process.env.CORS_ORIGINS ||
+  'http://localhost:3000,http://localhost:5173,http://traefik.lab:3000,http://traefik.lab,https://traefik.lab'
+)
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+
+const normalizeOrigin = (origin: string) => origin.trim().toLowerCase().replace(/\/+$/, '');
+const ALLOWED_ORIGINS = CORS_ORIGINS.map(normalizeOrigin);
+
+const isAllowedOrigin = (origin: string): boolean => {
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (ALLOWED_ORIGINS.includes(normalizedOrigin)) {
+    return true;
+  }
+
+  // If an allowed origin is configured without a port, allow same scheme + host on any port.
+  try {
+    const requested = new URL(normalizedOrigin);
+    return ALLOWED_ORIGINS.some((allowedOrigin) => {
+      try {
+        const allowed = new URL(allowedOrigin);
+        return (
+          allowed.protocol === requested.protocol &&
+          allowed.hostname === requested.hostname &&
+          !allowed.port
+        );
+      } catch {
+        return false;
+      }
+    });
+  } catch {
+    return false;
+  }
+};
 
 if (!ALLOW_UNAUTHENTICATED_API && !API_AUTH_TOKEN) {
   throw new Error(
@@ -47,7 +79,7 @@ app.use(
         return callback(null, true);
       }
 
-      if (CORS_ORIGINS.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         return callback(null, true);
       }
 
