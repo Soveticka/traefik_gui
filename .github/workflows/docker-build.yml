@@ -2,18 +2,38 @@ name: Build and Push Docker Images
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
+    paths:
+      - ".github/workflows/docker-build.yml"
+      - "frontend/**"
+      - "backend/**"
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
 
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  build-frontend:
+  build-and-push:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - component: frontend
+            image: traefik-gui-frontend
+            context: ./frontend
+          - component: backend
+            image: traefik-gui-backend
+            context: ./backend
+
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout
@@ -30,49 +50,17 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/traefik-gui-frontend
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image }}
           tags: |
             type=raw,value=latest
             type=sha,prefix=
 
-      - name: Build and push frontend
+      - name: Build and push ${{ matrix.component }}
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ${{ matrix.context }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-  build-backend:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/traefik-gui-backend
-          tags: |
-            type=raw,value=latest
-            type=sha,prefix=
-
-      - name: Build and push backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
