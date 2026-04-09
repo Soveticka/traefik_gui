@@ -29,7 +29,6 @@ interface FormData {
   serverHost: string;
   serverPort: string;
   servers: { url: string }[];
-  manualServerUrl: boolean;
   healthCheckEnabled: boolean;
   healthCheckPath: string;
   healthCheckInterval: string;
@@ -53,6 +52,21 @@ const buildRule = (host: string, pathPrefix: string) => {
 
   const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
   return `Host(\`${cleanHost}\`) && PathPrefix(\`${normalizedPath}\`)`;
+};
+
+const buildAddressPreview = (host: string, pathPrefix: string) => {
+  const cleanHost = host.trim();
+  if (!cleanHost) {
+    return '';
+  }
+
+  const cleanPath = pathPrefix.trim();
+  if (!cleanPath) {
+    return cleanHost;
+  }
+
+  const normalizedPath = cleanPath.startsWith('/') ? cleanPath : `/${cleanPath}`;
+  return `${cleanHost}${normalizedPath}`;
 };
 
 const buildServerUrl = (scheme: 'http' | 'https', host: string, port: string) => {
@@ -113,7 +127,6 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
       serverHost: '',
       serverPort: '8080',
       servers: [{ url: '' }],
-      manualServerUrl: false,
       healthCheckEnabled: true,
       healthCheckPath: '/health',
       healthCheckInterval: '30s',
@@ -130,14 +143,13 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
   const host = watch('host');
   const pathPrefix = watch('pathPrefix');
   const manualRule = watch('manualRule');
-  const rule = watch('rule');
   const tlsEnabled = watch('tlsEnabled');
   const healthCheckEnabled = watch('healthCheckEnabled');
   const serverScheme = watch('serverScheme');
   const serverHost = watch('serverHost');
   const serverPort = watch('serverPort');
-  const manualServerUrl = watch('manualServerUrl');
   const selectedEntryPoints = watch('entryPoints');
+  const addressPreview = buildAddressPreview(host, pathPrefix);
 
   useEffect(() => {
     const baseName = hostToBaseName(host);
@@ -166,15 +178,11 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
   }, [host, pathPrefix, manualRule, setValue]);
 
   useEffect(() => {
-    if (manualServerUrl) {
-      return;
-    }
-
     setValue('servers.0.url', buildServerUrl(serverScheme, serverHost, serverPort), {
       shouldDirty: false,
       shouldValidate: true,
     });
-  }, [serverScheme, serverHost, serverPort, manualServerUrl, setValue]);
+  }, [serverScheme, serverHost, serverPort, setValue]);
 
   useEffect(() => {
     const fetchMiddlewares = async () => {
@@ -208,18 +216,11 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
   };
 
   const applyRecommendedMiddlewares = () => {
-    const suggested = availableMiddlewares.filter((middleware) => {
-      const lower = middleware.toLowerCase();
-      return (
-        lower.includes('oidc') ||
-        lower.includes('auth') ||
-        lower.includes('security') ||
-        lower.includes('secure') ||
-        lower.includes('header') ||
-        lower.includes('rate') ||
-        lower.includes('limit')
-      );
-    });
+    const preferredOrder = ['error-pages', 'csp-strict'];
+    const lowerMap = new Map(availableMiddlewares.map((name) => [name.toLowerCase(), name]));
+    const suggested = preferredOrder
+      .map((name) => lowerMap.get(name))
+      .filter((name): name is string => Boolean(name));
 
     if (suggested.length > 0) {
       setValue('middlewares', suggested, { shouldDirty: true });
@@ -320,12 +321,12 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
             </div>
 
             <div>
-              <label className="form-label">Generated Rule</label>
+              <label className="form-label">Address Preview</label>
               <input
-                value={rule}
+                value={addressPreview}
                 readOnly
                 className="form-input opacity-80"
-                placeholder="Host(`app.lab.example`)"
+                placeholder="app.lab.example/api"
               />
             </div>
           </div>
@@ -493,11 +494,6 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
               </div>
 
               <div>
-                <label className="flex items-center mb-2">
-                  <input {...register('manualServerUrl')} type="checkbox" className="form-checkbox" />
-                  <span className="ml-2 text-sm text-[var(--text-secondary)]">Edit server URL manually</span>
-                </label>
-
                 {serverFields.map((field, index) => (
                   <div key={field.id} className="flex mt-1 space-x-2">
                     <input
@@ -511,7 +507,7 @@ const CombinedRouterServiceForm = ({ onSave, onClose }: CombinedFormProps) => {
                       type="text"
                       className="flex-1 form-input"
                       placeholder="http://app-service.lab:8080"
-                      disabled={index === 0 && !manualServerUrl}
+                      disabled={index === 0}
                     />
                     <button
                       type="button"
